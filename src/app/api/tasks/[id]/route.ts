@@ -30,11 +30,9 @@ export async function PATCH(
     updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
   }
 
-  if (data.status === "done") {
-    updateData.completed = true;
-  } else if (data.status && data.status !== "done") {
-    updateData.completed = false;
-  }
+if (data.status) {
+  updateData.completed = (data.status as string) === "done";
+}
 
   const [updated] = await db
     .update(tasks)
