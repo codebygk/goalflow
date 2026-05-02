@@ -17,11 +17,18 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 
+export const categorySchema = z.object({
+  name: z.string().min(1, "Name is required").max(50),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid color").default("#6366f1"),
+  icon: z.string().min(1).default("Tag"),
+});
+
 export const goalSchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
   description: z.string().max(500).optional(),
   status: z.enum(["active", "completed", "archived", "on_hold"]).default("active"),
   targetDate: z.string().optional().nullable(),
+  categoryId: z.string().uuid().optional().nullable(),
 });
 
 export const projectSchema = z.object({
@@ -39,12 +46,13 @@ export const taskSchema = z.object({
   priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
   dueDate: z.string().optional().nullable(),
   repeatInterval: z.enum(["none", "daily", "weekly", "biweekly", "monthly"]).default("none"),
-  repeatDays: z.string().optional().nullable(),       // "1,3,5" for weekly/biweekly
-  repeatMonthDay: z.number().int().min(1).max(31).optional().nullable(), // for monthly
+  repeatDays: z.string().optional().nullable(),
+  repeatMonthDay: z.number().int().min(1).max(31).optional().nullable(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type CategoryInput = z.infer<typeof categorySchema>;
 export type GoalInput = z.infer<typeof goalSchema>;
 export type ProjectInput = z.infer<typeof projectSchema>;
 export type TaskInput = z.infer<typeof taskSchema>;

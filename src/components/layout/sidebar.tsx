@@ -5,14 +5,15 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
-import { Target, FolderKanban, CheckSquare, LayoutDashboard, LogOut, Sun, Menu, X } from "lucide-react"
+import { Target, FolderKanban, CheckSquare, LogOut, Sun, Menu, X, Tag, BarChart2 } from "lucide-react"
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/my-day",    label: "My Day",    icon: Sun },
-  { href: "/goals",     label: "Goals",     icon: Target },
-  { href: "/projects",  label: "Projects",  icon: FolderKanban },
-  { href: "/tasks",     label: "Tasks",     icon: CheckSquare },
+  { href: "/overview",   label: "Overview",   icon: BarChart2 },
+  { href: "/my-day",     label: "My Day",     icon: Sun },
+  { href: "/goals",      label: "Goals",      icon: Target },
+  { href: "/projects",   label: "Projects",   icon: FolderKanban },
+  { href: "/tasks",      label: "Tasks",      icon: CheckSquare },
+  { href: "/categories", label: "Categories", icon: Tag },
 ]
 
 interface SidebarProps {
@@ -28,7 +29,7 @@ export function Sidebar({ user }: SidebarProps) {
       {/* Logo */}
       <div className="px-6 py-5 border-b">
         <span className="font-display text-2xl font-bold text-foreground">GoalSeed</span>
-        <p className="text-xs text-muted-foreground mt-0.5">Achieve more, every day</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Plant your goals. Grow your future.</p>
       </div>
 
       {/* Nav */}
@@ -77,12 +78,12 @@ export function Sidebar({ user }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden sm:flex fixed left-0 top-0 h-screen w-64 bg-white border-r flex-col z-40">
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white border-r flex-col z-40">
         <NavContent />
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sm:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b flex items-center justify-between px-4 z-40 mb-10">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b flex items-center justify-between px-4 z-40">
         <span className="font-display text-xl font-bold">GoalSeed</span>
         <button
           onClick={() => setMobileOpen(o => !o)}
@@ -94,7 +95,7 @@ export function Sidebar({ user }: SidebarProps) {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="sm:hidden fixed inset-0 z-50">
+        <div className="md:hidden fixed inset-0 z-50">
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
           {/* Drawer */}

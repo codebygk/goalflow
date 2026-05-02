@@ -7,10 +7,11 @@ export default auth((req) => {
 
   const isAuthRoute = pathname === "/login" || pathname === "/register"
   const isProtected =
-    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/overview") ||
     pathname.startsWith("/goals") ||
     pathname.startsWith("/projects") ||
     pathname.startsWith("/tasks") ||
+    pathname.startsWith("/categories") ||
     pathname.startsWith("/my-day")
 
   if (isProtected && !isLoggedIn) {

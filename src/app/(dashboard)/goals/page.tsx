@@ -1,17 +1,39 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { goals } from "@/lib/db/schema";
+import { goals, categories } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { GoalsList } from "@/components/goals/goals-list";
 import { CreateGoalButton } from "@/components/goals/create-goal-button";
 
 export default async function GoalsPage() {
   const session = await auth();
+  const userId = session!.user!.id!;
+
   const userGoals = await db
-    .select()
+    .select({
+      id: goals.id,
+      userId: goals.userId,
+      categoryId: goals.categoryId,
+      title: goals.title,
+      description: goals.description,
+      status: goals.status,
+      targetDate: goals.targetDate,
+      createdAt: goals.createdAt,
+      updatedAt: goals.updatedAt,
+      categoryName: categories.name,
+      categoryColor: categories.color,
+      categoryIcon: categories.icon,
+    })
     .from(goals)
-    .where(eq(goals.userId, session!.user!.id!))
+    .leftJoin(categories, eq(goals.categoryId, categories.id))
+    .where(eq(goals.userId, userId))
     .orderBy(desc(goals.createdAt));
+
+  const userCategories = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.userId, userId))
+    .orderBy(desc(categories.createdAt));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -22,7 +44,7 @@ export default async function GoalsPage() {
         </div>
         <CreateGoalButton />
       </div>
-      <GoalsList initialGoals={userGoals} />
+      <GoalsList initialGoals={userGoals as any} categories={userCategories} />
     </div>
   );
 }

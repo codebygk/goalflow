@@ -48,9 +48,20 @@ export const sessions = pgTable("sessions", {
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
+export const categories = pgTable("categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#6366f1"),
+  icon: text("icon").notNull().default("Tag"),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+});
+
 export const goals = pgTable("goals", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
   title: text("title").notNull(),
   description: text("description"),
   status: goalStatusEnum("status").default("active").notNull(),
@@ -80,23 +91,24 @@ export const tasks = pgTable("tasks", {
   priority: taskPriorityEnum("priority").default("medium").notNull(),
   dueDate: timestamp("due_date", { mode: "date" }),
   completed: boolean("completed").default(false).notNull(),
-  // Repeat
   repeatInterval: repeatIntervalEnum("repeat_interval").default("none").notNull(),
-  // comma-separated 0-6 (Sun=0) e.g. "1,3,5" for Mon/Wed/Fri
   repeatDays: text("repeat_days"),
-  // for monthly: day-of-month 1-31
   repeatMonthDay: integer("repeat_month_day"),
-  // soft delete
   deletedAt: timestamp("deleted_at", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
-  goals: many(goals), projects: many(projects), tasks: many(tasks),
+  goals: many(goals), projects: many(projects), tasks: many(tasks), categories: many(categories),
+}));
+export const categoriesRelations = relations(categories, ({ one, many }) => ({
+  user: one(users, { fields: [categories.userId], references: [users.id] }),
+  goals: many(goals),
 }));
 export const goalsRelations = relations(goals, ({ one, many }) => ({
   user: one(users, { fields: [goals.userId], references: [users.id] }),
+  category: one(categories, { fields: [goals.categoryId], references: [categories.id] }),
   projects: many(projects),
 }));
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -111,6 +123,8 @@ export const tasksRelations = relations(tasks, ({ one }) => ({
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type Category = typeof categories.$inferSelect;
+export type NewCategory = typeof categories.$inferInsert;
 export type Goal = typeof goals.$inferSelect;
 export type NewGoal = typeof goals.$inferInsert;
 export type Project = typeof projects.$inferSelect;

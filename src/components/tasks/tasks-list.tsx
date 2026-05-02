@@ -1,12 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn, formatDate, getStatusColor, getPriorityColor } from "@/lib/utils"
 import { repeatLabel } from "@/lib/repeat-utils"
 import {
-  CheckSquare, Pencil, Trash2, Calendar, FolderKanban,
+  CheckSquare, Pencil, Trash2, Calendar, FolderKanban, Search, ArrowUpDown,
   Flag, ChevronDown, ChevronUp, RefreshCw, Trash, RotateCcw,
 } from "lucide-react"
 import { TaskDialog } from "./task-dialog"
@@ -134,7 +136,16 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
   const [tasks, setTasks] = useState(initialTasks)
   const [editTarget, setEditTarget] = useState<TaskWithProject | null>(null)
   const [completedOpen, setCompletedOpen] = useState(false)
+  const [search, setSearch] = useState("")
+  const [priorityFilter, setPriorityFilter] = useState("all")
+  const [sortBy, setSortBy] = useState("createdAt")
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const router = useRouter()
+
+  const toggleSort = (field: string) => {
+    if (sortBy === field) setSortDir(d => d === "asc" ? "desc" : "asc")
+    else { setSortBy(field); setSortDir("desc") }
+  }
 
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" })
@@ -167,8 +178,28 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
     }
   }
 
-  const activeTasks = tasks.filter(t => t.status !== "done")
-  const doneTasks = tasks.filter(t => t.status === "done")
+  const filteredTasks = tasks
+    .filter(t => {
+      if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false
+      if (priorityFilter !== "all" && t.priority !== priorityFilter) return false
+      return true
+    })
+    .sort((a, b) => {
+      let va: any, vb: any
+      if (sortBy === "title") { va = a.title; vb = b.title }
+      else if (sortBy === "priority") {
+        const order = ["urgent","high","medium","low"]
+        va = order.indexOf(a.priority); vb = order.indexOf(b.priority)
+      }
+      else if (sortBy === "dueDate") { va = a.dueDate?.getTime() ?? 0; vb = b.dueDate?.getTime() ?? 0 }
+      else { va = a.createdAt.getTime(); vb = b.createdAt.getTime() }
+      if (va < vb) return sortDir === "asc" ? -1 : 1
+      if (va > vb) return sortDir === "asc" ? 1 : -1
+      return 0
+    })
+
+  const activeTasks = filteredTasks.filter(t => t.status !== "done")
+  const doneTasks = filteredTasks.filter(t => t.status === "done")
 
   if (tasks.length === 0) {
     return (
@@ -185,6 +216,36 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
 
   return (
     <>
+      {!trashMode && (
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All priorities</SelectItem>
+              <SelectItem value="urgent">Urgent</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex gap-1">
+            {[
+              { key: "createdAt", label: "Date" },
+              { key: "title", label: "A–Z" },
+              { key: "priority", label: "Priority" },
+              { key: "dueDate", label: "Due" },
+            ].map(s => (
+              <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
+                {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="space-y-2">
         {(trashMode ? tasks : activeTasks).map(task => (
           <TaskRow key={task.id} task={task} {...rowProps} />

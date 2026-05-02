@@ -16,7 +16,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "GoalSeed - Achieve More",
+  title: "GoalSeed - Plant your goals. Grow your future.",
   description: "Turn your goals into action with structured projects and tasks",
 };
 
