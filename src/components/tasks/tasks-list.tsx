@@ -46,7 +46,7 @@ function TaskRow({
         !trashMode && "cursor-pointer hover:border-primary/30",
       )}
     >
-      {/* Checkbox - stop propagation so clicking it doesn't open dialog */}
+      {/* Checkbox — stop propagation so clicking it doesn't open dialog */}
       <div onClick={e => e.stopPropagation()}>
         {!trashMode ? (
           <button
@@ -175,6 +175,8 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
     if (res.ok) {
       const json = await res.json()
       setTasks(prev => prev.map(t => t.id === task.id ? { ...json.task, projectTitle: t.projectTitle } : t))
+      console.log(task.title, "marked as", newStatus)
+      console.log("Task updated:", json.task)
     }
   }
 
@@ -192,7 +194,7 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
         va = order.indexOf(a.priority); vb = order.indexOf(b.priority)
       }
       else if (sortBy === "dueDate") { va = a.dueDate?.getTime() ?? 0; vb = b.dueDate?.getTime() ?? 0 }
-      else { va = a.createdAt.getTime(); vb = b.createdAt.getTime() }
+      else { va = Date.parse(a.createdAt.toString()); vb = Date.parse(b.createdAt.toString()) }
       if (va < vb) return sortDir === "asc" ? -1 : 1
       if (va > vb) return sortDir === "asc" ? 1 : -1
       return 0
