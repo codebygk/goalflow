@@ -193,7 +193,7 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
         const order = ["urgent","high","medium","low"]
         va = order.indexOf(a.priority); vb = order.indexOf(b.priority)
       }
-      else if (sortBy === "dueDate") { va = a.dueDate?.getTime() ?? 0; vb = b.dueDate?.getTime() ?? 0 }
+      else if (sortBy === "dueDate") { va = Date.parse(a.dueDate?.toString() ?? "0"); vb = Date.parse(b.dueDate?.toString() ?? "0") }
       else { va = Date.parse(a.createdAt.toString()); vb = Date.parse(b.createdAt.toString()) }
       if (va < vb) return sortDir === "asc" ? -1 : 1
       if (va > vb) return sortDir === "asc" ? 1 : -1

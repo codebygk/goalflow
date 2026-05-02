@@ -63,7 +63,7 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
     .sort((a, b) => {
       let va: any, vb: any
       if (sortBy === "title") { va = a.title; vb = b.title }
-      else if (sortBy === "targetDate") { va = a.targetDate?.getTime() ?? 0; vb = b.targetDate?.getTime() ?? 0 }
+      else if (sortBy === "targetDate") { va = Date.parse(a.targetDate?.toString() ?? "0"); vb = Date.parse(b.targetDate?.toString() ?? "0") }
       else if (sortBy === "status") { va = a.status; vb = b.status }
       else { va = Date.parse(a.createdAt.toString()); vb = Date.parse(b.createdAt.toString()) }
       if (va < vb) return sortDir === "asc" ? -1 : 1
