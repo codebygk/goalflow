@@ -50,23 +50,22 @@ export function Sidebar({ user }: SidebarProps) {
         })}
       </nav>
 
-      {/* User */}
-      <div className="px-3 py-4 border-t">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-lg mb-1">
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
+      <div className="flex items-center justify-between gap-2 px-3 py-4 border-t">
+        <div className="flex items-center gap-3 px-3 py-2 rounded-lg min-w-0">
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
             {user.name?.[0]?.toUpperCase() ?? "U"}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0">
             <p className="text-sm font-medium truncate">{user.name ?? "User"}</p>
             <p className="text-xs text-muted-foreground truncate">{user.email}</p>
           </div>
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all w-full"
+          title="Sign out"
+          className="p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all shrink-0"
         >
           <LogOut className="w-4 h-4" />
-          Sign out
         </button>
       </div>
     </aside>
