@@ -4,7 +4,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="font-display text-4xl font-bold text-foreground tracking-tight">
-            GoalFlow
+            GoalSeed
           </h1>
           <p className="text-muted-foreground mt-2 text-sm">
             Turn ambition into achievement

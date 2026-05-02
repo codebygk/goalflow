@@ -24,7 +24,7 @@ export function Sidebar({ user }: SidebarProps) {
     <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r flex flex-col z-40">
       {/* Logo */}
       <div className="px-6 py-5 border-b">
-        <span className="font-display text-2xl font-bold text-foreground">GoalFlow</span>
+        <span className="font-display text-2xl font-bold text-foreground">GoalSeed</span>
         <p className="text-xs text-muted-foreground mt-0.5">Achieve more, every day</p>
       </div>
 

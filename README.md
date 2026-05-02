@@ -1,4 +1,4 @@
-# GoalFlow
+# GoalSeed
 
 A full-stack goal tracking app built with Next.js 14, NextAuth v5, Drizzle ORM, and Neon Postgres.
 
@@ -15,9 +15,9 @@ A full-stack goal tracking app built with Next.js 14, NextAuth v5, Drizzle ORM, 
 ## Features
 
 - 🔐 Email/password authentication
-- 🎯 **Goals** — Define what you want to achieve
-- 📁 **Projects** — Linked to goals, organize your work
-- ✅ **Tasks** — Linked to projects, actionable items with priority & due dates
+- 🎯 **Goals** - Define what you want to achieve
+- 📁 **Projects** - Linked to goals, organize your work
+- ✅ **Tasks** - Linked to projects, actionable items with priority & due dates
 - Full CRUD for all entities
 - One-click task completion toggle
 
@@ -40,7 +40,7 @@ cp .env.local.example .env.local
 Fill in:
 
 ```env
-# From neon.tech — create a project and copy the connection string
+# From neon.tech - create a project and copy the connection string
 DATABASE_URL="postgresql://..."
 
 # Generate with: openssl rand -base64 32
