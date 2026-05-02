@@ -32,6 +32,3 @@ next-env.d.ts
 
 # Drizzle
 drizzle/
-
-.vercel
-.env*.local

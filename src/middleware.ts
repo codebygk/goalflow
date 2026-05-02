@@ -6,19 +6,19 @@ export default auth((req) => {
   const { pathname } = req.nextUrl
 
   const isAuthRoute = pathname === "/login" || pathname === "/register"
-  const isProtected = pathname.startsWith("/dashboard") ||
+  const isProtected =
+    pathname.startsWith("/dashboard") ||
     pathname.startsWith("/goals") ||
     pathname.startsWith("/projects") ||
-    pathname.startsWith("/tasks")
+    pathname.startsWith("/tasks") ||
+    pathname.startsWith("/my-day")
 
   if (isProtected && !isLoggedIn) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
-
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", req.url))
+    return NextResponse.redirect(new URL("/my-day", req.url))
   }
-
   return NextResponse.next()
 })
 

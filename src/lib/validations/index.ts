@@ -38,6 +38,9 @@ export const taskSchema = z.object({
   status: z.enum(["todo", "in_progress", "done", "cancelled"]).default("todo"),
   priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
   dueDate: z.string().optional().nullable(),
+  repeatInterval: z.enum(["none", "daily", "weekly", "biweekly", "monthly"]).default("none"),
+  repeatDays: z.string().optional().nullable(),       // "1,3,5" for weekly/biweekly
+  repeatMonthDay: z.number().int().min(1).max(31).optional().nullable(), // for monthly
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

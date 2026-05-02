@@ -9,7 +9,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar user={session.user} />
-      <main className="flex-1 ml-64 p-8 overflow-auto">
+      {/* Desktop: offset by sidebar width. Mobile: offset by top bar height */}
+      <main className="flex-1 sm:ml-64 pt-20 sm:pt-14 p-4 sm:p-8 overflow-auto">
         {children}
       </main>
     </div>

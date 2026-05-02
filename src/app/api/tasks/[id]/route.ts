@@ -30,9 +30,9 @@ export async function PATCH(
     updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
   }
 
-if (data.status) {
-  updateData.completed = (data.status as string) === "done";
-}
+  if (data.status) {
+    updateData.completed = (data.status as string) === "done";
+  }
 
   const [updated] = await db
     .update(tasks)
@@ -47,6 +47,7 @@ if (data.status) {
   return NextResponse.json({ task: updated });
 }
 
+// Soft delete
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
@@ -56,9 +57,15 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await db
-    .delete(tasks)
-    .where(and(eq(tasks.id, params.id), eq(tasks.userId, session.user.id)));
+  const [updated] = await db
+    .update(tasks)
+    .set({ deletedAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(tasks.id, params.id), eq(tasks.userId, session.user.id)))
+    .returning();
+
+  if (!updated) {
+    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+  }
 
   return NextResponse.json({ success: true });
 }

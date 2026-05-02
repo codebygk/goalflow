@@ -29,7 +29,7 @@ export default async function GoalDetailPage({ params }: { params: { id: string 
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="bg-white rounded-2xl p-6 border shadow-sm">
+      <div className="bg-white rounded-2xl p-4 md:p-6 border shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">

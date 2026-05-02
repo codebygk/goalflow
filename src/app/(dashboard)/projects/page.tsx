@@ -27,9 +27,9 @@ export default async function ProjectsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
-          <h1 className="font-display text-3xl font-bold">Projects</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-bold">Projects</h1>
           <p className="text-muted-foreground mt-1">Organize your work into projects</p>
         </div>
         <CreateProjectButton />
