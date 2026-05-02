@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation"
 
 interface Props { initialTasks: TaskWithProject[] }
 
-export function MyDayClient({ initialTasks }: Props) {
+export function TodayClient({ initialTasks }: Props) {
   const [tasks, setTasks] = useState(initialTasks)
   const [completedOpen, setCompletedOpen] = useState(false)
   const router = useRouter()
@@ -68,7 +68,7 @@ export function MyDayClient({ initialTasks }: Props) {
       {/* Active tasks */}
       <div className="space-y-2">
         {active.map(task => (
-          <MyDayTaskRow key={task.id} task={task} onToggle={toggleDone} />
+          <TodayTaskRow key={task.id} task={task} onToggle={toggleDone} />
         ))}
       </div>
 
@@ -85,7 +85,7 @@ export function MyDayClient({ initialTasks }: Props) {
           {completedOpen && (
             <div className="space-y-2 mt-2">
               {done.map(task => (
-                <MyDayTaskRow key={task.id} task={task} onToggle={toggleDone} />
+                <TodayTaskRow key={task.id} task={task} onToggle={toggleDone} />
               ))}
             </div>
           )}
@@ -95,7 +95,7 @@ export function MyDayClient({ initialTasks }: Props) {
   )
 }
 
-function MyDayTaskRow({ task, onToggle }: { task: TaskWithProject; onToggle: (t: TaskWithProject) => void }) {
+function TodayTaskRow({ task, onToggle }: { task: TaskWithProject; onToggle: (t: TaskWithProject) => void }) {
   const repeat = repeatLabel(task)
   const isDone = task.status === "done"
 

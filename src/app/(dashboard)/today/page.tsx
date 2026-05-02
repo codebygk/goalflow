@@ -3,9 +3,9 @@ import { db } from "@/lib/db";
 import { tasks, projects } from "@/lib/db/schema";
 import { eq, and, isNull, ne } from "drizzle-orm";
 import { isTaskScheduledToday } from "@/lib/repeat-utils";
-import { MyDayClient } from "@/components/tasks/my-day-client";
+import { TodayClient } from "@/components/tasks/today-client";
 
-export default async function MyDayPage() {
+export default async function TodayPage() {
   const session = await auth();
 
   const allTasks = await db
@@ -42,14 +42,14 @@ export default async function MyDayPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">{dateLabel}</p>
-        <h1 className="font-display text-2xl md:text-3xl font-bold mt-1">My Day</h1>
+        <h1 className="font-display text-2xl md:text-3xl font-bold mt-1">Today</h1>
         <p className="text-muted-foreground mt-1">
           {todayTasks.length === 0
             ? "Nothing scheduled for today - enjoy the day!"
             : `${todayTasks.filter(t => !t.completed).length} task${todayTasks.filter(t => !t.completed).length !== 1 ? "s" : ""} remaining`}
         </p>
       </div>
-      <MyDayClient initialTasks={todayTasks} />
+      <TodayClient initialTasks={todayTasks} />
     </div>
   );
 }

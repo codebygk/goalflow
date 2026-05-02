@@ -12,13 +12,13 @@ export default auth((req) => {
     pathname.startsWith("/projects") ||
     pathname.startsWith("/tasks") ||
     pathname.startsWith("/categories") ||
-    pathname.startsWith("/my-day")
+    pathname.startsWith("/today")
 
   if (isProtected && !isLoggedIn) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/my-day", req.url))
+    return NextResponse.redirect(new URL("/today", req.url))
   }
   return NextResponse.next()
 })

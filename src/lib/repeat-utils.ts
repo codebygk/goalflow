@@ -1,7 +1,7 @@
 import { Task } from "@/lib/db/schema";
 
 /**
- * Returns true if a repeating task should appear in "My Day" today.
+ * Returns true if a repeating task should appear in "Today" today.
  */
 export function isTaskScheduledToday(task: Pick<Task, "repeatInterval" | "repeatDays" | "repeatMonthDay" | "dueDate">): boolean {
   const today = new Date();

@@ -10,7 +10,7 @@ GoalSeed is a full-stack goal management app built with Next.js 14, TypeScript, 
 - **Categories** - CRUD categories (name, color, icon) and assign to goals
 - **Projects** - Break goals into projects
 - **Tasks** - Actionable tasks with priority, due dates, repeat intervals
-- **My Day** - Daily focus view
+- **Today** - Daily focus view
 - **Overview** - Weekly and monthly progress with exportable social cards
 - **Search, Filter & Sort** - Available on Goals, Projects, and Tasks
 - **Auth** - Email/password via NextAuth v5

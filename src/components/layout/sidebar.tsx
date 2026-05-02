@@ -9,7 +9,7 @@ import { Target, FolderKanban, CheckSquare, LogOut, Sun, Menu, X, Tag, BarChart2
 
 const navItems = [
   { href: "/overview",   label: "Overview",   icon: BarChart2 },
-  { href: "/my-day",     label: "My Day",     icon: Sun },
+  { href: "/today",     label: "Today",     icon: Sun },
   { href: "/goals",      label: "Goals",      icon: Target },
   { href: "/projects",   label: "Projects",   icon: FolderKanban },
   { href: "/tasks",      label: "Tasks",      icon: CheckSquare },
