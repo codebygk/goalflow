@@ -1,18 +1,31 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-display",
-  weight: ["400", "500", "600", "700"],
-});
+import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 
-const dmSans = DM_Sans({
+// Body font (primary text)
+export const fontBody = Inter({
   subsets: ["latin"],
   variable: "--font-body",
-  weight: ["300", "400", "500", "600"],
+  display: "swap",
+  weight: ["400", "500", "600"],
+});
+
+// Display font (headings, hero text)
+export const fontDisplay = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["500", "600", "700"],
+});
+
+// Mono font (code, numbers, data)
+export const fontMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
+    <html lang="en" className={` ${fontBody.variable} ${fontDisplay.variable} ${fontMono.variable}`}>
       <body className="font-body antialiased">
         {children}
         <Toaster />
