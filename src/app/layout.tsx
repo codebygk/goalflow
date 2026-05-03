@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 
 // Body font (primary text)
-export const fontBody = Inter({
+const fontBody = Inter({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
@@ -13,7 +13,7 @@ export const fontBody = Inter({
 });
 
 // Display font (headings, hero text)
-export const fontDisplay = Space_Grotesk({
+const fontDisplay = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
@@ -21,7 +21,7 @@ export const fontDisplay = Space_Grotesk({
 });
 
 // Mono font (code, numbers, data)
-export const fontMono = JetBrains_Mono({
+const fontMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
   display: "swap",
