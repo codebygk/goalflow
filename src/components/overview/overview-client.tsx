@@ -73,7 +73,7 @@ export function OverviewClient({
     const catGoalIds = catGoals.map(g => g.id)
     const catProjects = allProjects.filter(p => catGoalIds.includes(p.goalId))
     const catProjectIds = catProjects.map(p => p.id)
-    const catTasks = allTasks.filter(t => catProjectIds.includes(t.projectId))
+    const catTasks = allTasks.filter(t => catProjectIds.includes(t.projectId || "") && ((view === "week" && new Date(t.createdAt) >= weekStart && new Date(t.createdAt) <= weekEnd) || (view === "month" && new Date(t.createdAt) >= monthStart && new Date(t.createdAt) <= monthEnd)))
     const catDone = catTasks.filter(t => t.completed)
     return { ...cat, goals: catGoals.length, tasks: catTasks.length, done: catDone.length }
   })
