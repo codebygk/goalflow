@@ -6,10 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn, formatDate, getStatusColor, getPriorityColor } from "@/lib/utils"
-import { repeatLabel } from "@/lib/repeat-utils"
+import { repeatLabel, nextRepeatDate } from "@/lib/repeat-utils"
 import {
   CheckSquare, Pencil, Trash2, Calendar, FolderKanban, Search, ArrowUpDown,
-  Flag, ChevronDown, ChevronUp, RefreshCw, Trash, RotateCcw, Plus
+  Flag, ChevronDown, ChevronUp, RefreshCw, Trash, RotateCcw, Plus, Sun,
+  CalendarDays, CalendarRange, Inbox
 } from "lucide-react"
 import { TaskDialog } from "./task-dialog"
 import { DeleteConfirm } from "@/components/ui/delete-confirm"
@@ -26,17 +27,30 @@ interface TasksListProps {
   trashMode?: boolean
 }
 
+const PRIORITY_CYCLE = ["low", "medium", "high", "urgent"] as const
+const STATUS_CYCLE = ["todo", "in_progress", "done", "cancelled"] as const
+
 function TaskRow({
-  task, onToggle, onEdit, onDelete, onRestore, trashMode,
+  task, onToggle, onEdit, onDelete, onRestore, onCyclePriority, onCycleStatus, onSchedule, trashMode,
 }: {
   task: TaskWithProject
   onToggle: (t: TaskWithProject) => void
   onEdit: (t: TaskWithProject) => void
   onDelete: (id: string) => void
   onRestore?: (id: string) => void
+  onCyclePriority?: (t: TaskWithProject) => void
+  onCycleStatus?: (t: TaskWithProject) => void
+  onSchedule?: (t: TaskWithProject, when: "today" | "tomorrow" | "this-week" | "later") => void
   trashMode?: boolean
 }) {
   const repeat = repeatLabel(task)
+
+  const isToday = (() => {
+    if (!task.dueDate) return false
+    const d = new Date(task.dueDate)
+    const now = new Date()
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+  })()
 
   return (
     <div
@@ -73,20 +87,44 @@ function TaskRow({
           <span className={cn("font-medium text-sm", task.status === "done" && !trashMode && "line-through text-muted-foreground")}>
             {task.title}
           </span>
-          <Badge className={cn("capitalize border text-xs", getStatusColor(task.status))}>
-            {task.status.replace("_", " ")}
-          </Badge>
+          {/* Clickable status badge — cycles through statuses */}
+          {!trashMode ? (
+            <button
+              onClick={e => { e.stopPropagation(); onCycleStatus?.(task) }}
+              title="Click to change status"
+              className="focus:outline-none"
+            >
+              <Badge className={cn("capitalize border text-xs cursor-pointer hover:opacity-80 transition-opacity", getStatusColor(task.status))}>
+                {task.status.replace("_", " ")}
+              </Badge>
+            </button>
+          ) : (
+            <Badge className={cn("capitalize border text-xs", getStatusColor(task.status))}>
+              {task.status.replace("_", " ")}
+            </Badge>
+          )}
         </div>
         {task.description && (
           <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.description}</p>
         )}
         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-          <span className={cn("flex items-center gap-1 text-xs font-medium", getPriorityColor(task.priority))}>
-            <Flag className="w-3 h-3" /> {task.priority}
-          </span>
+          {/* Clickable priority — cycles through priorities */}
+          {!trashMode ? (
+            <button
+              onClick={e => { e.stopPropagation(); onCyclePriority?.(task) }}
+              title="Click to change priority"
+              className={cn("flex items-center gap-1 text-xs font-medium hover:opacity-70 transition-opacity", getPriorityColor(task.priority))}
+            >
+              <Flag className="w-3 h-3" /> {task.priority}
+            </button>
+          ) : (
+            <span className={cn("flex items-center gap-1 text-xs font-medium", getPriorityColor(task.priority))}>
+              <Flag className="w-3 h-3" /> {task.priority}
+            </span>
+          )}
           {task.dueDate && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Calendar className="w-3 h-3" /> {formatDate(task.dueDate)}
+            <span className={cn("flex items-center gap-1 text-xs", isToday ? "text-amber-500 font-medium" : "text-muted-foreground")}>
+              <Calendar className="w-3 h-3" /> {isToday ? "Today" : formatDate(task.dueDate)}
             </span>
           )}
           {repeat && (
@@ -174,6 +212,23 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
   }
 
   const toggleDone = async (task: TaskWithProject) => {
+    const isRecurring = task.repeatInterval !== "none"
+    if (isRecurring && task.status !== "done") {
+      // For recurring tasks: advance dueDate to next occurrence, keep as todo
+      const next = nextRepeatDate(task)
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dueDate: next ? next.toISOString() : null, status: "todo" }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setTasks(prev => prev.map(t => t.id === task.id ? { ...json.task, projectTitle: t.projectTitle } : t))
+        toast({ title: "Task done! Next instance scheduled ↻" })
+        router.refresh()
+      }
+      return
+    }
     const newStatus = task.status === "done" ? "todo" : "done"
     const res = await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
@@ -183,17 +238,79 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
     if (res.ok) {
       const json = await res.json()
       setTasks(prev => prev.map(t => t.id === task.id ? { ...json.task, projectTitle: t.projectTitle } : t))
-      console.log(task.title, "marked as", newStatus)
-      console.log("Task updated:", json.task)
     }
   }
 
-  const filteredTasks = tasks
-    .filter(t => {
-      if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false
-      if (priorityFilter !== "all" && t.priority !== priorityFilter) return false
-      return true
+  const handleCyclePriority = async (task: TaskWithProject) => {
+    const idx = PRIORITY_CYCLE.indexOf(task.priority as typeof PRIORITY_CYCLE[number])
+    const nextPriority = PRIORITY_CYCLE[(idx + 1) % PRIORITY_CYCLE.length]
+    const res = await fetch(`/api/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priority: nextPriority }),
     })
+    if (res.ok) {
+      const json = await res.json()
+      setTasks(prev => prev.map(t => t.id === task.id ? { ...json.task, projectTitle: t.projectTitle } : t))
+      toast({ title: `Priority set to ${nextPriority}` })
+    }
+  }
+
+  const handleCycleStatus = async (task: TaskWithProject) => {
+    const idx = STATUS_CYCLE.indexOf(task.status as typeof STATUS_CYCLE[number])
+    const nextStatus = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length]
+    const res = await fetch(`/api/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: nextStatus }),
+    })
+    if (res.ok) {
+      const json = await res.json()
+      setTasks(prev => prev.map(t => t.id === task.id ? { ...json.task, projectTitle: t.projectTitle } : t))
+      toast({ title: `Status set to ${nextStatus.replace("_", " ")}` })
+      router.refresh()
+    }
+  }
+
+  const handleSchedule = async (task: TaskWithProject, when: "today" | "tomorrow" | "this-week" | "later") => {
+    let dueDate: string | null = null
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    if (when === "today") {
+      dueDate = now.toISOString()
+    } else if (when === "tomorrow") {
+      const d = new Date(now); d.setDate(d.getDate() + 1)
+      dueDate = d.toISOString()
+    } else if (when === "this-week") {
+      // End of this week (Sunday=0 ... Saturday=6 → next Friday or end of week)
+      const d = new Date(now)
+      const daysUntilEndOfWeek = 7 - d.getDay() // days until next Sunday; use Friday instead
+      d.setDate(d.getDate() + Math.max(2, daysUntilEndOfWeek - 1))
+      dueDate = d.toISOString()
+    } else {
+      // later — clear due date
+      dueDate = null
+    }
+    const res = await fetch(`/api/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dueDate }),
+    })
+    if (res.ok) {
+      const json = await res.json()
+      setTasks(prev => prev.map(t => t.id === task.id ? { ...json.task, projectTitle: t.projectTitle } : t))
+      const labels = { today: "Added to Today ☀️", tomorrow: "Scheduled for Tomorrow", "this-week": "Scheduled for This Week", later: "Moved to Later" }
+      toast({ title: labels[when] })
+      router.refresh()
+    }
+  }
+
+
+  const filteredTasks = tasks.filter(t => {
+    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false
+    if (priorityFilter !== "all" && t.priority !== priorityFilter) return false
+    return true
+  })
     .sort((a, b) => {
       let va: any, vb: any
       if (sortBy === "title") { va = a.title; vb = b.title }
@@ -211,28 +328,34 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
   const activeTasks = filteredTasks.filter(t => t.status !== "done")
   const doneTasks = filteredTasks.filter(t => t.status === "done")
 
-  if (tasks.length === 0) {
-    return (
-      <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
-        {trashMode
-          ? <><Trash className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">Trash is empty</p></>
-          : <><CheckSquare className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">No tasks yet</p><p className="text-sm mt-1">Create your first actionable task</p>
-            <Button size={"sm"} className="mt-3" onClick={() => setCreateOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" /> New Task
-            </Button>
-          </>
-        }
-      </div>
-    )
+  const rowProps = {
+    onToggle: toggleDone,
+    onEdit: setEditTarget,
+    onDelete: handleDelete,
+    onRestore: handleRestore,
+    onCyclePriority: handleCyclePriority,
+    onCycleStatus: handleCycleStatus,
+    onSchedule: handleSchedule,
+    trashMode,
   }
 
-  const rowProps = { onToggle: toggleDone, onEdit: setEditTarget, onDelete: handleDelete, onRestore: handleRestore, trashMode }
-
   return (
-    <>
-      {!trashMode && (
+    tasks.length === 0 ? (
+      <>
+        <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
+          {trashMode
+            ? <><Trash className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">Trash is empty</p></>
+            : <><CheckSquare className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">No tasks yet</p><p className="text-sm mt-1">Create your first actionable task</p>
+              <Button className="mt-4" onClick={() => setCreateOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" /> New Task
+              </Button>
+            </>
+          }
+        </div>
+      </>
+    ) : (
+      <>
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
-
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
@@ -270,52 +393,52 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
             <Plus className="w-4 h-4 mr-2" /> New Task
           </Button>
         </div>
-      )}
-      <div className="space-y-2">
-        {(trashMode ? tasks : activeTasks).map(task => (
-          <TaskRow key={task.id} task={task} {...rowProps} />
-        ))}
-      </div>
-
-      {/* Completed accordion */}
-      {!trashMode && doneTasks.length > 0 && (
-        <div className="mt-4">
-          <button
-            onClick={() => setCompletedOpen(o => !o)}
-            className="flex items-center gap-2 text-sm text-muted-foreground font-medium hover:text-foreground transition-colors px-1 py-2 w-full"
-          >
-            {completedOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            Completed ({doneTasks.length})
-          </button>
-          {completedOpen && (
-            <div className="space-y-2 mt-2">
-              {doneTasks.map(task => (
-                <TaskRow key={task.id} task={task} {...rowProps} />
-              ))}
-            </div>
-          )}
+        <div className="space-y-2">
+          {(trashMode ? tasks : activeTasks).map(task => (
+            <TaskRow key={task.id} task={task} {...rowProps} />
+          ))}
         </div>
-      )}
 
-      {editTarget && (
-        <TaskDialog
-          open={!!editTarget}
-          onOpenChange={open => { if (!open) setEditTarget(null) }}
-          task={editTarget}
-          projectId={projectId}
-          onSave={updated => {
-            setTasks(prev => prev.map(t => t.id === updated.id ? { ...updated, projectTitle: editTarget.projectTitle } : t))
-            setEditTarget(null)
-          }}
-        />
-      )}
-      {createOpen && (
-        <TaskDialog
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-          onSave={handleAdd}
-        />
-      )}
-    </>
+        {/* Completed accordion */}
+        {!trashMode && doneTasks.length > 0 && (
+          <div className="mt-4">
+            <button
+              onClick={() => setCompletedOpen(o => !o)}
+              className="flex items-center gap-2 text-sm text-muted-foreground font-medium hover:text-foreground transition-colors px-1 py-2 w-full"
+            >
+              {completedOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              Completed ({doneTasks.length})
+            </button>
+            {completedOpen && (
+              <div className="space-y-2 mt-2">
+                {doneTasks.map(task => (
+                  <TaskRow key={task.id} task={task} {...rowProps} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {editTarget && (
+          <TaskDialog
+            open={!!editTarget}
+            onOpenChange={open => { if (!open) setEditTarget(null) }}
+            task={editTarget}
+            projectId={projectId}
+            onSave={updated => {
+              setTasks(prev => prev.map(t => t.id === updated.id ? { ...updated, projectTitle: editTarget.projectTitle } : t))
+              setEditTarget(null)
+            }}
+          />
+        )}
+        {createOpen && (
+          <TaskDialog
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+            onSave={handleAdd}
+          />
+        )}
+      </>
+    )
   )
 }

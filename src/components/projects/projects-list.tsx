@@ -23,18 +23,12 @@ interface ProjectsListProps {
 export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
   const [projects, setProjects] = useState(initialProjects)
   const [editTarget, setEditTarget] = useState<ProjectWithGoal | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const router = useRouter()
-  const [createOpen, setCreateOpen] = useState(false)
-
-  const handleAdd = (newProject: Project) => {
-    setProjects(prev => [{
-      ...newProject,
-    }, ...prev])
-  }
 
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/projects/${id}`, { method: "DELETE" })
@@ -45,6 +39,10 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
     }
   }
 
+  const handleAdd = (newProject: Project) => {
+    setProjects(prev => [newProject, ...prev])
+  }
+
   const toggleSort = (field: string) => {
     if (sortBy === field) setSortDir(d => d === "asc" ? "desc" : "asc")
     else { setSortBy(field); setSortDir("desc") }
@@ -53,7 +51,7 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
   const filtered = projects
     .filter(p => {
       if (search && !p.title.toLowerCase().includes(search.toLowerCase()) &&
-        !(p.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
+          !(p.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
       if (statusFilter !== "all" && p.status !== statusFilter) return false
       return true
     })
@@ -69,6 +67,7 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
 
   return (
     <>
+      {/* Toolbar — always visible */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -95,16 +94,17 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
             </Button>
           ))}
         </div>
-                <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+        <Button onClick={() => setCreateOpen(true)}>
           <Plus className="w-4 h-4 mr-2" /> New Project
         </Button>
       </div>
 
+      {/* List or empty state */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
           <FolderKanban className="w-10 h-10 mx-auto mb-3 opacity-30" />
           <p className="font-medium">{projects.length === 0 ? "No projects yet" : "No projects match"}</p>
-          <p className="text-sm mt-1">{projects.length === 0 ? "Add a project to this goal to get started" : "Try adjusting filters"}</p>
+          <p className="text-sm mt-1">{projects.length === 0 ? "Add your first project above" : "Try adjusting filters"}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -146,6 +146,15 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
         </div>
       )}
 
+      {createOpen && (
+        <ProjectDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          goalId={goalId}
+          onSave={newProject => { handleAdd(newProject); setCreateOpen(false) }}
+        />
+      )}
+
       {editTarget && (
         <ProjectDialog
           open={!!editTarget}
@@ -156,14 +165,6 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
             setProjects(prev => prev.map(p => p.id === updated.id ? { ...updated, goalTitle: editTarget.goalTitle } : p))
             setEditTarget(null)
           }}
-        />
-      )}
-      {createOpen && (
-        <ProjectDialog
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-          goalId={goalId}
-          onSave={handleAdd}
         />
       )}
     </>

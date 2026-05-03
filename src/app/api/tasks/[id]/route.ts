@@ -69,3 +69,25 @@ export async function DELETE(
 
   return NextResponse.json({ success: true });
 }
+
+// Hard delete (permanent) — only for already-soft-deleted tasks
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const [deleted] = await db
+    .delete(tasks)
+    .where(and(eq(tasks.id, params.id), eq(tasks.userId, session.user.id)))
+    .returning();
+
+  if (!deleted) {
+    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true });
+}

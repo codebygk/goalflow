@@ -10,6 +10,10 @@ import { Flag, Calendar, FolderKanban, RefreshCw, ChevronDown, ChevronUp, Sun } 
 import { toast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 
+import { nextRepeatDate } from "@/lib/repeat-utils"
+
+
+
 interface Props { initialTasks: TaskWithProject[] }
 
 export function TodayClient({ initialTasks }: Props) {
@@ -18,6 +22,23 @@ export function TodayClient({ initialTasks }: Props) {
   const router = useRouter()
 
   const toggleDone = async (task: TaskWithProject) => {
+    const isRecurring = task.repeatInterval !== "none"
+    if (isRecurring && task.status !== "done") {
+      // Advance to next occurrence rather than marking done
+      const next = nextRepeatDate(task)
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dueDate: next ? next.toISOString() : null, status: "todo" }),
+      })
+      if (res.ok) {
+        // Remove from today's list since it's been advanced
+        setTasks(prev => prev.filter(t => t.id !== task.id))
+        toast({ title: "Done! Next instance scheduled ↻" })
+        router.refresh()
+      }
+      return
+    }
     const newStatus = task.status === "done" ? "todo" : "done"
     const res = await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",

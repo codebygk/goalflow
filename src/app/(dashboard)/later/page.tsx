@@ -4,13 +4,8 @@ import { tasks, projects } from "@/lib/db/schema";
 import { eq, and, isNull, ne } from "drizzle-orm";
 import { TasksList } from "@/components/tasks/tasks-list";
 
-export default async function TomorrowPage() {
+export default async function LaterPage() {
   const session = await auth();
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dayAfter = new Date(today);
-  dayAfter.setDate(dayAfter.getDate() + 1);
 
   const allTasks = await db
     .select({
@@ -28,32 +23,23 @@ export default async function TomorrowPage() {
     .where(and(
       eq(tasks.userId, session!.user!.id!),
       isNull(tasks.deletedAt),
+      isNull(tasks.dueDate),
       ne(tasks.status, "cancelled"),
+      ne(tasks.status, "done"),
     ));
-
-  const todayTasks = allTasks.filter(t => {
-    if (!t.dueDate) return false;
-    const d = new Date(t.dueDate);
-    return d >= today && d < dayAfter;
-  });
-
-  const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 } as Record<string, number>;
-  todayTasks.sort((a, b) => (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2));
-
-  const dateLabel = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">{dateLabel}</p>
-        <h1 className="font-display text-2xl md:text-3xl font-bold mt-1">Today</h1>
+        <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Someday</p>
+        <h1 className="font-display text-2xl md:text-3xl font-bold mt-1">Later</h1>
         <p className="text-muted-foreground mt-1">
-          {todayTasks.length === 0
-            ? "Nothing scheduled for today yet."
-            : `${todayTasks.filter(t => t.status !== "done").length} task${todayTasks.filter(t => t.status !== "done").length !== 1 ? "s" : ""} ahead`}
+          {allTasks.length === 0
+            ? "No tasks parked for later."
+            : `${allTasks.length} task${allTasks.length !== 1 ? "s" : ""} with no due date`}
         </p>
       </div>
-      <TasksList initialTasks={todayTasks} />
+      <TasksList initialTasks={allTasks} />
     </div>
   );
 }

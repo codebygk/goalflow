@@ -7,9 +7,10 @@ import { TasksList } from "@/components/tasks/tasks-list";
 export default async function TomorrowPage() {
   const session = await auth();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dayAfter = new Date(today);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  const dayAfter = new Date(tomorrow);
   dayAfter.setDate(dayAfter.getDate() + 1);
 
   const allTasks = await db
@@ -31,29 +32,29 @@ export default async function TomorrowPage() {
       ne(tasks.status, "cancelled"),
     ));
 
-  const todayTasks = allTasks.filter(t => {
+  const tomorrowTasks = allTasks.filter(t => {
     if (!t.dueDate) return false;
     const d = new Date(t.dueDate);
-    return d >= today && d < dayAfter;
+    return d >= tomorrow && d < dayAfter;
   });
 
   const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 } as Record<string, number>;
-  todayTasks.sort((a, b) => (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2));
+  tomorrowTasks.sort((a, b) => (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2));
 
-  const dateLabel = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const dateLabel = tomorrow.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">{dateLabel}</p>
-        <h1 className="font-display text-2xl md:text-3xl font-bold mt-1">Today</h1>
+        <h1 className="font-display text-2xl md:text-3xl font-bold mt-1">Tomorrow</h1>
         <p className="text-muted-foreground mt-1">
-          {todayTasks.length === 0
-            ? "Nothing scheduled for today yet."
-            : `${todayTasks.filter(t => t.status !== "done").length} task${todayTasks.filter(t => t.status !== "done").length !== 1 ? "s" : ""} ahead`}
+          {tomorrowTasks.length === 0
+            ? "Nothing scheduled for tomorrow yet."
+            : `${tomorrowTasks.filter(t => t.status !== "done").length} task${tomorrowTasks.filter(t => t.status !== "done").length !== 1 ? "s" : ""} ahead`}
         </p>
       </div>
-      <TasksList initialTasks={todayTasks} />
+      <TasksList initialTasks={tomorrowTasks} />
     </div>
   );
 }

@@ -61,6 +61,60 @@ export function repeatLabel(task: Pick<Task, "repeatInterval" | "repeatDays" | "
   }
 }
 
+/**
+ * Given a repeating task, compute the next due date after today (or after `from`).
+ * Returns null for non-repeating tasks.
+ */
+export function nextRepeatDate(
+  task: Pick<Task, "repeatInterval" | "repeatDays" | "repeatMonthDay" | "dueDate">,
+  from: Date = new Date()
+): Date | null {
+  if (task.repeatInterval === "none") return null;
+
+  const start = new Date(from);
+  start.setHours(0, 0, 0, 0);
+  // Advance by at least 1 day to get the *next* occurrence
+  const candidate = new Date(start);
+  candidate.setDate(candidate.getDate() + 1);
+
+  // Search up to 400 days ahead
+  for (let i = 0; i < 400; i++) {
+    if (isTaskScheduledOnDate(task, candidate)) return new Date(candidate);
+    candidate.setDate(candidate.getDate() + 1);
+  }
+  return null;
+}
+
+/** Like isTaskScheduledToday but for an arbitrary date */
+function isTaskScheduledOnDate(
+  task: Pick<Task, "repeatInterval" | "repeatDays" | "repeatMonthDay" | "dueDate">,
+  date: Date
+): boolean {
+  const dow = date.getDay();
+  const dom = date.getDate();
+
+  switch (task.repeatInterval) {
+    case "none":
+      return false;
+    case "daily":
+      return true;
+    case "weekly":
+    case "biweekly": {
+      if (!task.repeatDays) return false;
+      const days = task.repeatDays.split(",").map(Number);
+      if (!days.includes(dow)) return false;
+      if (task.repeatInterval === "weekly") return true;
+      const startOfYear = new Date(date.getFullYear(), 0, 1);
+      const weekNo = Math.ceil(((date.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+      return weekNo % 2 === 0;
+    }
+    case "monthly":
+      return task.repeatMonthDay === dom;
+    default:
+      return false;
+  }
+}
+
 function ordinal(n: number) {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;

@@ -1,18 +1,17 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn, formatDate, getStatusColor } from "@/lib/utils"
-import { Target, Calendar, Pencil, Trash2, Search, ArrowUpDown, Tag, Plus, SeparatorVertical, SeparatorVerticalIcon } from "lucide-react"
+import { Target, Calendar, Pencil, Trash2, Search, ArrowUpDown, Tag, Plus } from "lucide-react"
 import { GoalDialog } from "./goal-dialog"
 import { DeleteConfirm } from "@/components/ui/delete-confirm"
 import { toast } from "@/hooks/use-toast"
 import { Goal, Category } from "@/lib/db/schema"
-import { Separator } from "@radix-ui/react-select"
 
 type GoalWithCategory = Goal & {
   categoryName?: string | null
@@ -28,23 +27,13 @@ interface GoalsListProps {
 export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
   const [goals, setGoals] = useState(initialGoals)
   const [editTarget, setEditTarget] = useState<GoalWithCategory | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const router = useRouter()
-  const [createOpen, setCreateOpen] = useState(false)
-
-  const handleAdd = (newGoal: Goal) => {
-    const category = categories.find(c => c.id === newGoal.categoryId)
-    setGoals(prev => [{
-      ...newGoal,
-      categoryName: category?.name ?? null,
-      categoryColor: category?.color ?? null,
-      categoryIcon: category?.icon ?? null,
-    }, ...prev])
-  }
 
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/goals/${id}`, { method: "DELETE" })
@@ -55,6 +44,10 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
     }
   }
 
+  const handleAdd = (newGoal: Goal) => {
+    setGoals(prev => [{ ...newGoal, categoryName: null, categoryColor: null, categoryIcon: null }, ...prev])
+  }
+
   const toggleSort = (field: string) => {
     if (sortBy === field) setSortDir(d => d === "asc" ? "desc" : "asc")
     else { setSortBy(field); setSortDir("desc") }
@@ -63,7 +56,7 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
   const filtered = goals
     .filter(g => {
       if (search && !g.title.toLowerCase().includes(search.toLowerCase()) &&
-        !(g.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
+          !(g.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
       if (statusFilter !== "all" && g.status !== statusFilter) return false
       if (categoryFilter !== "all") {
         if (categoryFilter === "none") { if (g.categoryId) return false }
@@ -84,7 +77,7 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
 
   return (
     <>
-      {/* Search + Filters */}
+      {/* Toolbar — always visible */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -141,16 +134,17 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
             </Button>
           ))}
         </div>
-        <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+        <Button onClick={() => setCreateOpen(true)}>
           <Plus className="w-4 h-4 mr-2" /> New Goal
         </Button>
       </div>
 
+      {/* List or empty state */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
           <Target className="w-10 h-10 mx-auto mb-3 opacity-30" />
           <p className="font-medium">{goals.length === 0 ? "No goals yet" : "No goals match your filters"}</p>
-          <p className="text-sm mt-1">{goals.length === 0 ? "Create your first goal to get started" : "Try adjusting your search or filters"}</p>
+          <p className="text-sm mt-1">{goals.length === 0 ? "Add your first goal above" : "Try adjusting your search or filters"}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -211,22 +205,26 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
         </div>
       )}
 
+      {createOpen && (
+        <GoalDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onSave={newGoal => { handleAdd(newGoal); setCreateOpen(false) }}
+        />
+      )}
+
       {editTarget && (
         <GoalDialog
           open={!!editTarget}
           onOpenChange={open => { if (!open) setEditTarget(null) }}
           goal={editTarget}
           onSave={updated => {
-            setGoals(prev => prev.map(g => g.id === updated.id ? { ...updated, categoryName: editTarget.categoryName, categoryColor: editTarget.categoryColor } : g))
+            setGoals(prev => prev.map(g => g.id === updated.id
+              ? { ...updated, categoryName: editTarget.categoryName, categoryColor: editTarget.categoryColor, categoryIcon: editTarget.categoryIcon }
+              : g
+            ))
             setEditTarget(null)
           }}
-        />
-      )}
-      {createOpen && (
-        <GoalDialog
-          open={createOpen}
-          onOpenChange={setCreateOpen}
-          onSave={handleAdd}
         />
       )}
     </>
