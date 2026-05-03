@@ -5,11 +5,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
-import { Target, FolderKanban, CheckSquare, LogOut, Menu, X, Tag, BarChart2, Calendar } from "lucide-react"
+import { Target, FolderKanban, CheckSquare, LogOut, Menu, X, Tag, BarChart2, Calendar, Inbox } from "lucide-react"
 
 const navItems = [
   { href: "/overview",   label: "Overview",   icon: BarChart2 },
-  { href: "/today",     label: "Today",     icon: Calendar },
+  { href: "/today",      label: "Today",      icon: Calendar },
+  { href: "/inbox",      label: "Inbox",      icon: Inbox },
   { href: "/goals",      label: "Goals",      icon: Target },
   { href: "/projects",   label: "Projects",   icon: FolderKanban },
   { href: "/tasks",      label: "Tasks",      icon: CheckSquare },

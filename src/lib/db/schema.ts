@@ -84,7 +84,7 @@ export const projects = pgTable("projects", {
 export const tasks = pgTable("tasks", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
   status: taskStatusEnum("status").default("todo").notNull(),

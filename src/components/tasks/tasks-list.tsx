@@ -47,7 +47,7 @@ function TaskRow({
         !trashMode && "cursor-pointer hover:border-primary/30",
       )}
     >
-      {/* Checkbox — stop propagation so clicking it doesn't open dialog */}
+      {/* Checkbox - stop propagation so clicking it doesn't open dialog */}
       <div onClick={e => e.stopPropagation()}>
         {!trashMode ? (
           <button
@@ -216,7 +216,11 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
       <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
         {trashMode
           ? <><Trash className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">Trash is empty</p></>
-          : <><CheckSquare className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">No tasks yet</p><p className="text-sm mt-1">Break your project into actionable tasks</p></>
+          : <><CheckSquare className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">No tasks yet</p><p className="text-sm mt-1">Create your first actionable task</p>
+            <Button size={"sm"} className="mt-3" onClick={() => setCreateOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> New Task
+            </Button>
+          </>
         }
       </div>
     )
@@ -263,7 +267,7 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
             </Button>
           </Link>
           <Button size={"sm"} onClick={() => setCreateOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> New Project
+            <Plus className="w-4 h-4 mr-2" /> New Task
           </Button>
         </div>
       )}

@@ -50,7 +50,7 @@ export function TaskDialog({ open, onOpenChange, task, projectId, projectTitle, 
     defaultValues: {
       title: task?.title ?? "",
       description: task?.description ?? "",
-      projectId: task?.projectId ?? projectId ?? "",
+      projectId: task?.projectId ?? projectId ?? null,
       status: task?.status ?? "todo",
       priority: task?.priority ?? "medium",
       dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
@@ -133,7 +133,7 @@ export function TaskDialog({ open, onOpenChange, task, projectId, projectTitle, 
 
           {/* Project */}
           <div className="space-y-1.5">
-            <Label>Project</Label>
+            <Label>Project <span className="text-muted-foreground">(optional)</span></Label>
             {projectId ? (
               <Input value={projectTitle ?? projectId} disabled />
             ) : (
@@ -141,9 +141,12 @@ export function TaskDialog({ open, onOpenChange, task, projectId, projectTitle, 
                 control={control}
                 name="projectId"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue placeholder="Select a project" /></SelectTrigger>
+                  <Select value={field.value ?? "inbox"} onValueChange={v => field.onChange(v === "inbox" ? null : v)}>
+                    <SelectTrigger><SelectValue placeholder="Inbox (no project)" /></SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="inbox">
+                        <span className="text-muted-foreground">Inbox - no project</span>
+                      </SelectItem>
                       {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
                     </SelectContent>
                   </Select>

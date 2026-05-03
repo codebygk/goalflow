@@ -11,13 +11,19 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get("projectId");
+  const inbox = searchParams.get("inbox") === "true";
   const showDeleted = searchParams.get("deleted") === "true";
 
-  const baseConditions = [
+  const conditions: any[] = [
     eq(tasks.userId, session.user.id),
     showDeleted ? isNotNull(tasks.deletedAt) : isNull(tasks.deletedAt),
   ];
-  if (projectId) baseConditions.push(eq(tasks.projectId, projectId));
+
+  if (inbox) {
+    conditions.push(isNull(tasks.projectId));
+  } else if (projectId) {
+    conditions.push(eq(tasks.projectId, projectId));
+  }
 
   const rows = await db
     .select({
@@ -40,7 +46,7 @@ export async function GET(req: NextRequest) {
     })
     .from(tasks)
     .leftJoin(projects, eq(tasks.projectId, projects.id))
-    .where(and(...baseConditions))
+    .where(and(...conditions))
     .orderBy(desc(tasks.createdAt));
 
   return NextResponse.json({ tasks: rows });
@@ -56,13 +62,15 @@ export async function POST(req: NextRequest) {
 
   const { title, description, projectId, status, priority, dueDate, repeatInterval, repeatDays, repeatMonthDay } = parsed.data;
 
-  const [project] = await db.select().from(projects)
-    .where(and(eq(projects.id, projectId), eq(projects.userId, session.user.id))).limit(1);
-  if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  if (projectId) {
+    const [project] = await db.select().from(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.userId, session.user.id))).limit(1);
+    if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
 
   const [task] = await db.insert(tasks).values({
     userId: session.user.id,
-    projectId,
+    projectId: projectId ?? null,
     title,
     description,
     status,

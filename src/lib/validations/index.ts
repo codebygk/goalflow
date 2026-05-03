@@ -41,7 +41,7 @@ export const projectSchema = z.object({
 export const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
   description: z.string().max(500).optional(),
-  projectId: z.string().uuid("Invalid project"),
+  projectId: z.string().uuid("Invalid project").optional().nullable(),
   status: z.enum(["todo", "in_progress", "done", "cancelled"]).default("todo"),
   priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
   dueDate: z.string().optional().nullable(),
