@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { tasks, projects } from "@/lib/db/schema";
 import { eq, desc, isNotNull, and } from "drizzle-orm";
-import { TasksList } from "@/components/tasks/tasks-list";
+import { TrashList } from "@/components/trash/trash-list";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -34,9 +34,11 @@ export default async function TrashPage() {
       </div>
       <div>
         <h1 className="font-display text-3xl font-bold">Trash</h1>
-        <p className="text-muted-foreground mt-1">Deleted tasks - restore any time</p>
+        <p className="text-muted-foreground mt-1">
+          {deletedTasks.length === 0 ? "No deleted tasks" : `${deletedTasks.length} deleted task${deletedTasks.length !== 1 ? "s" : ""}`}
+        </p>
       </div>
-      <TasksList initialTasks={deletedTasks} trashMode />
+      <TrashList initialTasks={deletedTasks} />
     </div>
   );
 }
