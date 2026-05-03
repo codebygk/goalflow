@@ -4,7 +4,6 @@ import { goals, projects } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ProjectsList } from "@/components/projects/projects-list";
-import { CreateProjectButton } from "@/components/projects/create-project-button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, getStatusColor } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -57,7 +56,6 @@ export default async function GoalDetailPage({ params }: { params: { id: string 
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl font-semibold">Projects</h2>
-          <CreateProjectButton goalId={params.id} goalTitle={goal.title} />
         </div>
         <ProjectsList initialProjects={goalProjects} goalId={params.id} />
       </div>

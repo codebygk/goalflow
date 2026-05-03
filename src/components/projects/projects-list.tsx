@@ -69,11 +69,6 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> New Project
-        </Button>
-      </div>
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -100,6 +95,9 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
             </Button>
           ))}
         </div>
+                <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" /> New Project
+        </Button>
       </div>
 
       {filtered.length === 0 ? (

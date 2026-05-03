@@ -4,7 +4,6 @@ import { projects, tasks, goals } from "@/lib/db/schema";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { TasksList } from "@/components/tasks/tasks-list";
-import { CreateTaskButton } from "@/components/tasks/create-task-button";
 import { Badge } from "@/components/ui/badge";
 import { cn, getStatusColor } from "@/lib/utils";
 import { FolderKanban, Target } from "lucide-react";
@@ -74,7 +73,6 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl font-semibold">Tasks</h2>
-          <CreateTaskButton projectId={params.id} projectTitle={project.title} />
         </div>
         <TasksList initialTasks={tasksWithProject} projectId={params.id} />
       </div>

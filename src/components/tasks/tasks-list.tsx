@@ -227,49 +227,45 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
   return (
     <>
       {!trashMode && (
-        <>
-          <div className="flex items-center justify-end gap-2">
-            <Link
-              href="/tasks/trash"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors border"
-            >
-              <Trash2 className="w-4 h-4" /> Trash
-            </Link>
-              <Button onClick={() => setCreateOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" /> New Project
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All priorities</SelectItem>
+              <SelectItem value="urgent">Urgent</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex gap-1">
+            {[
+              { key: "createdAt", label: "Date" },
+              { key: "title", label: "A–Z" },
+              { key: "priority", label: "Priority" },
+              { key: "dueDate", label: "Due" },
+            ].map(s => (
+              <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
+                {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
               </Button>
+            ))}
           </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 mb-4">
-
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All priorities</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex gap-1">
-              {[
-                { key: "createdAt", label: "Date" },
-                { key: "title", label: "A–Z" },
-                { key: "priority", label: "Priority" },
-                { key: "dueDate", label: "Due" },
-              ].map(s => (
-                <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
-                  {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </>
+          <Link
+            href="/tasks/trash"
+          >
+            <Button variant={"outline"} size={"sm"} >
+              <Trash2 className="w-4 h-4 mr-2" /> Trash
+            </Button>
+          </Link>
+          <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> New Project
+          </Button>
+        </div>
       )}
       <div className="space-y-2">
         {(trashMode ? tasks : activeTasks).map(task => (

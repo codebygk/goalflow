@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn, formatDate, getStatusColor } from "@/lib/utils"
-import { Target, Calendar, Pencil, Trash2, Search, ArrowUpDown, Tag, Plus } from "lucide-react"
+import { Target, Calendar, Pencil, Trash2, Search, ArrowUpDown, Tag, Plus, SeparatorVertical, SeparatorVerticalIcon } from "lucide-react"
 import { GoalDialog } from "./goal-dialog"
 import { DeleteConfirm } from "@/components/ui/delete-confirm"
 import { toast } from "@/hooks/use-toast"
 import { Goal, Category } from "@/lib/db/schema"
+import { Separator } from "@radix-ui/react-select"
 
 type GoalWithCategory = Goal & {
   categoryName?: string | null
@@ -83,11 +84,6 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> New Goal
-        </Button>
-      </div>
       {/* Search + Filters */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
@@ -145,6 +141,9 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
             </Button>
           ))}
         </div>
+        <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" /> New Goal
+        </Button>
       </div>
 
       {filtered.length === 0 ? (
