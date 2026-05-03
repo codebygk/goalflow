@@ -18,7 +18,7 @@ const navItems = [
   { href: "/this-week", label: "This Week", icon: CalendarRange },
   { href: "/later", label: "Later", icon: Clock },
   { href: "/categories", label: "Categories", icon: Tag },
-  { href: "/tasks/trash", label: "Trash", icon: Trash2 },
+  { href: "/trash", label: "Trash", icon: Trash2 },
 ]
 
 interface SidebarProps {
