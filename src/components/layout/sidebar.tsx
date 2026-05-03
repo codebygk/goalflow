@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { Target, FolderKanban, CheckSquare, LogOut, Menu, X, Tag, BarChart2, Calendar, Inbox, Sun, CalendarDays, CalendarRange, Clock, Trash2 } from "lucide-react"
+import Image from "next/image"
 
 const navItems = [
   { href: "/overview", label: "Overview", icon: BarChart2 },
@@ -34,11 +35,14 @@ export function Sidebar({ user }: SidebarProps) {
   const NavContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-6 py-5 border-b shrink-0">
-        <span className="font-display text-2xl font-bold text-foreground">GoalSeed</span>
+      <div className="flex items-center px-6 py-5 border-b shrink-0">
+        <Image src="/logo.svg" alt="GoalSeed Logo" width={32} height={32} className="inline-block mr-2" />
+        <div className="flex flex-col items-start">
+        <span className="font-display text-xl font-bold text-foreground">GoalSeed</span>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Plant your goals. Grow your future.
+          Growing future with goals.
         </p>
+        </div>
       </div>
 
       {/* Nav (ONLY THIS SCROLLS) */}

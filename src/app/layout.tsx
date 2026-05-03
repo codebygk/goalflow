@@ -29,8 +29,12 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GoalSeed - Plant your goals. Grow your future.",
+  title: "GoalSeed - Growing future with goals.",
   description: "Turn your goals into action with structured projects and tasks",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

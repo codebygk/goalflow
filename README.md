@@ -1,6 +1,6 @@
 # GoalSeed
 
-> Plant seeds. Grow goals.
+> Growing your future with goals..
 
 GoalSeed is a full-stack goal management app built with Next.js 14, TypeScript, Tailwind CSS, shadcn/ui, and Neon Postgres (Drizzle ORM).
 
