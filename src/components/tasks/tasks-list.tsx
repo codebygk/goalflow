@@ -398,55 +398,55 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
       {tasks.length === 0 && (
         <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
           {trashMode
-            ? <><Trash className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">Trash is empty</p></>
-            : <><CheckSquare className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">No tasks yet</p><p className="text-sm mt-1">Create your first actionable task</p>
-              <Button className="mt-4" onClick={() => setCreateOpen(true)}>
+            ? <><Trash className="w-10 h-10 mx-auto opacity-30" />
+              <p className="font-medium">Trash is empty</p></>
+            : <div className="flex flex-col items-center gap-2">
+              <CheckSquare className="w-10 h-10 mx-auto opacity-30" />
+              <p className="font-medium">No tasks yet</p>
+              <p className="text-sm">Create your first actionable task</p>
+              <Button size={"sm"} onClick={() => setCreateOpen(true)} className="mt-3">
                 <Plus className="w-4 h-4 mr-2" /> New Task
               </Button>
-            </>
+            </div>
           }
         </div>
       )}
       {tasks.length > 0 && (
         <>
-          <div className="flex flex-col sm:flex-row gap-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All priorities</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex gap-1">
-              {[
-                { key: "createdAt", label: "Date" },
-                { key: "title", label: "A–Z" },
-                { key: "priority", label: "Priority" },
-                { key: "dueDate", label: "Due" },
-              ].map(s => (
-                <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
-                  {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
-                </Button>
-              ))}
-            </div>
-            <Link
-              href="/tasks/trash"
-            >
-              <Button variant={"outline"} size={"sm"} >
-                <Trash2 className="w-4 h-4 mr-2" /> Trash
+          {(!trashMode && (
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All priorities</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex gap-1">
+                {[
+                  { key: "createdAt", label: "Date" },
+                  { key: "title", label: "A–Z" },
+                  { key: "priority", label: "Priority" },
+                  { key: "dueDate", label: "Due" },
+                ].map(s => (
+                  <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
+                    {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
+                  </Button>
+                ))}
+              </div>
+              <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" /> New Task
               </Button>
-            </Link>
-            <Button size={"sm"} onClick={() => setCreateOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" /> New Task
-            </Button>
-          </div>
+            </div>
+          ))}
+
           <div className="space-y-2">
             {(trashMode ? tasks : activeTasks).map(task => (
               <TaskRow key={task.id} task={task} {...rowProps} />

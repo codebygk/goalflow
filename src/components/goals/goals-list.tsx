@@ -56,7 +56,7 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
   const filtered = goals
     .filter(g => {
       if (search && !g.title.toLowerCase().includes(search.toLowerCase()) &&
-          !(g.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
+        !(g.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
       if (statusFilter !== "all" && g.status !== statusFilter) return false
       if (categoryFilter !== "all") {
         if (categoryFilter === "none") { if (g.categoryId) return false }
@@ -76,9 +76,20 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
     })
 
   return (
-    <>
-      {/* Toolbar — always visible */}
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+    <>   
+      {/* List or empty state */}
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 text-center py-16 text-muted-foreground border rounded-2xl bg-white">
+          <Target className="w-10 h-10 mx-auto opacity-30" />
+          <p className="font-medium">{goals.length === 0 ? "No goals yet" : "No goals match your filters"}</p>
+          <p className="text-sm">{goals.length === 0 ? "Add your first goal to achieve it" : "Try adjusting your search or filters"}</p>
+          <Button size={"sm"} onClick={() => setCreateOpen(true)} className="mt-3">
+            <Plus className="w-4 h-4 mr-2" /> New Goal
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -134,20 +145,10 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
             </Button>
           ))}
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button size={"sm"} onClick={() => setCreateOpen(true)}>
           <Plus className="w-4 h-4 mr-2" /> New Goal
         </Button>
       </div>
-
-      {/* List or empty state */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
-          <Target className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">{goals.length === 0 ? "No goals yet" : "No goals match your filters"}</p>
-          <p className="text-sm mt-1">{goals.length === 0 ? "Add your first goal above" : "Try adjusting your search or filters"}</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
           {filtered.map(goal => (
             <div
               key={goal.id}

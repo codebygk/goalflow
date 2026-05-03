@@ -51,7 +51,7 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
   const filtered = projects
     .filter(p => {
       if (search && !p.title.toLowerCase().includes(search.toLowerCase()) &&
-          !(p.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
+        !(p.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
       if (statusFilter !== "all" && p.status !== statusFilter) return false
       return true
     })
@@ -67,47 +67,50 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
 
   return (
     <>
-      {/* Toolbar — always visible */}
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Search projects…" value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="on_hold">On Hold</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="flex gap-1">
-          {[
-            { key: "createdAt", label: "Date" },
-            { key: "title", label: "A–Z" },
-            { key: "status", label: "Status" },
-          ].map(s => (
-            <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
-              {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
-            </Button>
-          ))}
-        </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> New Project
-        </Button>
-      </div>
+
 
       {/* List or empty state */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
-          <FolderKanban className="w-10 h-10 mx-auto mb-3 opacity-30" />
+        <div className="flex flex-col items-center gap-2 text-center py-16 text-muted-foreground border rounded-2xl bg-white">
+          <FolderKanban className="w-10 h-10 mx-auto opacity-30" />
           <p className="font-medium">{projects.length === 0 ? "No projects yet" : "No projects match"}</p>
-          <p className="text-sm mt-1">{projects.length === 0 ? "Add your first project above" : "Try adjusting filters"}</p>
+          <p className="text-sm">{projects.length === 0 ? "Add your first project to get started" : "Try adjusting filters"}</p>
+          <Button size={"sm"} onClick={() => setCreateOpen(true)} className="mt-3">
+            <Plus className="w-4 h-4 mr-2" /> New Project
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Search projects…" value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-1">
+              {[
+                { key: "createdAt", label: "Date" },
+                { key: "title", label: "A–Z" },
+                { key: "status", label: "Status" },
+              ].map(s => (
+                <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
+                  {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
+                </Button>
+              ))}
+            </div>
+            <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> New Project
+            </Button>
+          </div>
           {filtered.map(project => (
             <div
               key={project.id}
