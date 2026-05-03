@@ -146,10 +146,33 @@ function TaskRow({
         onClick={e => e.stopPropagation()}
       >
         {trashMode ? (
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
-            onClick={() => onRestore?.(task.id)} title="Restore">
-            <RotateCcw className="w-4 h-4" />
-          </Button>
+          <>
+            {/* Restore */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-emerald-600 hover:text-emerald-700"
+              onClick={() => onRestore?.(task.id)}
+              title="Restore"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+
+            {/* Permanent delete */}
+            <DeleteConfirm
+              title="Delete permanently?"
+              description="This action cannot be undone."
+              onConfirm={() => onDelete(task.id)} // we will override this
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </DeleteConfirm>
+          </>
         ) : (
           <>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)}>
@@ -198,6 +221,18 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
     if (res.ok) {
       setTasks(prev => prev.filter(t => t.id !== id))
       toast({ title: "Moved to trash" })
+      router.refresh()
+    }
+  }
+
+  const handlePermanentDelete = async (id: string) => {
+    const res = await fetch(`/api/tasks/${id}/delete`, {
+      method: "DELETE",
+    })
+
+    if (res.ok) {
+      setTasks(prev => prev.filter(t => t.id !== id))
+      toast({ title: "Task permanently deleted" })
       router.refresh()
     }
   }
@@ -331,7 +366,7 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
   const rowProps = {
     onToggle: toggleDone,
     onEdit: setEditTarget,
-    onDelete: handleDelete,
+    onDelete: trashMode ? handlePermanentDelete : handleDelete,
     onRestore: handleRestore,
     onCyclePriority: handleCyclePriority,
     onCycleStatus: handleCycleStatus,
@@ -340,8 +375,27 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
   }
 
   return (
-    tasks.length === 0 ? (
-      <>
+    <>
+      {editTarget && (
+        <TaskDialog
+          open={!!editTarget}
+          onOpenChange={open => { if (!open) setEditTarget(null) }}
+          task={editTarget}
+          projectId={projectId}
+          onSave={updated => {
+            setTasks(prev => prev.map(t => t.id === updated.id ? { ...updated, projectTitle: editTarget.projectTitle } : t))
+            setEditTarget(null)
+          }}
+        />
+      )}
+      {createOpen && (
+        <TaskDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onSave={handleAdd}
+        />
+      )}
+      {tasks.length === 0 && (
         <div className="text-center py-16 text-muted-foreground border rounded-2xl bg-white">
           {trashMode
             ? <><Trash className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="font-medium">Trash is empty</p></>
@@ -352,93 +406,93 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
             </>
           }
         </div>
-      </>
-    ) : (
-      <>
-        <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All priorities</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex gap-1">
-            {[
-              { key: "createdAt", label: "Date" },
-              { key: "title", label: "A–Z" },
-              { key: "priority", label: "Priority" },
-              { key: "dueDate", label: "Due" },
-            ].map(s => (
-              <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
-                {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
+      )}
+      {tasks.length > 0 && (
+        <>
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All priorities</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-1">
+              {[
+                { key: "createdAt", label: "Date" },
+                { key: "title", label: "A–Z" },
+                { key: "priority", label: "Priority" },
+                { key: "dueDate", label: "Due" },
+              ].map(s => (
+                <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
+                  {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
+                </Button>
+              ))}
+            </div>
+            <Link
+              href="/tasks/trash"
+            >
+              <Button variant={"outline"} size={"sm"} >
+                <Trash2 className="w-4 h-4 mr-2" /> Trash
               </Button>
+            </Link>
+            <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> New Task
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {(trashMode ? tasks : activeTasks).map(task => (
+              <TaskRow key={task.id} task={task} {...rowProps} />
             ))}
           </div>
-          <Link
-            href="/tasks/trash"
+        </>
+      )}
+
+      {!trashMode && doneTasks.length > 0 && (
+        <div className="mt-4">
+          <button
+            onClick={() => setCompletedOpen(o => !o)}
+            className="flex items-center gap-2 text-sm text-muted-foreground font-medium hover:text-foreground transition-colors px-1 py-2 w-full"
           >
-            <Button variant={"outline"} size={"sm"} >
-              <Trash2 className="w-4 h-4 mr-2" /> Trash
-            </Button>
-          </Link>
-          <Button size={"sm"} onClick={() => setCreateOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> New Task
-          </Button>
+            {completedOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            Completed ({doneTasks.length})
+          </button>
+          {completedOpen && (
+            <div className="space-y-2 mt-2">
+              {doneTasks.map(task => (
+                <TaskRow key={task.id} task={task} {...rowProps} />
+              ))}
+            </div>
+          )}
         </div>
-        <div className="space-y-2">
-          {(trashMode ? tasks : activeTasks).map(task => (
-            <TaskRow key={task.id} task={task} {...rowProps} />
-          ))}
-        </div>
+      )}
+      {editTarget && (
+        <TaskDialog
+          open={!!editTarget}
+          onOpenChange={open => { if (!open) setEditTarget(null) }}
+          task={editTarget}
+          projectId={projectId}
+          onSave={updated => {
+            setTasks(prev => prev.map(t => t.id === updated.id ? { ...updated, projectTitle: editTarget.projectTitle } : t))
+            setEditTarget(null)
+          }}
+        />
+      )}
+      {createOpen && (
+        <TaskDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onSave={handleAdd}
+        />
+      )}
+    </>
 
-        {/* Completed accordion */}
-        {!trashMode && doneTasks.length > 0 && (
-          <div className="mt-4">
-            <button
-              onClick={() => setCompletedOpen(o => !o)}
-              className="flex items-center gap-2 text-sm text-muted-foreground font-medium hover:text-foreground transition-colors px-1 py-2 w-full"
-            >
-              {completedOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              Completed ({doneTasks.length})
-            </button>
-            {completedOpen && (
-              <div className="space-y-2 mt-2">
-                {doneTasks.map(task => (
-                  <TaskRow key={task.id} task={task} {...rowProps} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {editTarget && (
-          <TaskDialog
-            open={!!editTarget}
-            onOpenChange={open => { if (!open) setEditTarget(null) }}
-            task={editTarget}
-            projectId={projectId}
-            onSave={updated => {
-              setTasks(prev => prev.map(t => t.id === updated.id ? { ...updated, projectTitle: editTarget.projectTitle } : t))
-              setEditTarget(null)
-            }}
-          />
-        )}
-        {createOpen && (
-          <TaskDialog
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-            onSave={handleAdd}
-          />
-        )}
-      </>
-    )
   )
 }
