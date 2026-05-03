@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { goals, categories } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { GoalsList } from "@/components/goals/goals-list";
-import { CreateGoalButton } from "@/components/goals/create-goal-button";
 
 export default async function GoalsPage() {
   const session = await auth();
@@ -42,7 +41,6 @@ export default async function GoalsPage() {
           <h1 className="font-display text-2xl md:text-3xl font-bold">Goals</h1>
           <p className="text-muted-foreground mt-1">Define what you want to achieve</p>
         </div>
-        <CreateGoalButton />
       </div>
       <GoalsList initialGoals={userGoals as any} categories={userCategories} />
     </div>

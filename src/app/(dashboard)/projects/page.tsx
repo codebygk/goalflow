@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { projects, goals } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { ProjectsList } from "@/components/projects/projects-list";
-import { CreateProjectButton } from "@/components/projects/create-project-button";
 
 export default async function ProjectsPage() {
   const session = await auth();
@@ -32,7 +31,6 @@ export default async function ProjectsPage() {
           <h1 className="font-display text-2xl md:text-3xl font-bold">Projects</h1>
           <p className="text-muted-foreground mt-1">Organize your work into projects</p>
         </div>
-        <CreateProjectButton />
       </div>
       <ProjectsList initialProjects={userProjects} />
     </div>

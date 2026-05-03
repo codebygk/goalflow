@@ -9,13 +9,14 @@ import { cn, formatDate, getStatusColor, getPriorityColor } from "@/lib/utils"
 import { repeatLabel } from "@/lib/repeat-utils"
 import {
   CheckSquare, Pencil, Trash2, Calendar, FolderKanban, Search, ArrowUpDown,
-  Flag, ChevronDown, ChevronUp, RefreshCw, Trash, RotateCcw,
+  Flag, ChevronDown, ChevronUp, RefreshCw, Trash, RotateCcw, Plus
 } from "lucide-react"
 import { TaskDialog } from "./task-dialog"
 import { DeleteConfirm } from "@/components/ui/delete-confirm"
 import { toast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Task } from "@/lib/db/schema"
+import Link from "next/link"
 
 export type TaskWithProject = Task & { projectTitle?: string | null }
 
@@ -141,6 +142,13 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const router = useRouter()
+  const [createOpen, setCreateOpen] = useState(false)
+
+  const handleAdd = (newTask: Task) => {
+    setTasks(prev => [{
+      ...newTask,
+    }, ...prev])
+  }
 
   const toggleSort = (field: string) => {
     if (sortBy === field) setSortDir(d => d === "asc" ? "desc" : "asc")
@@ -190,7 +198,7 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
       let va: any, vb: any
       if (sortBy === "title") { va = a.title; vb = b.title }
       else if (sortBy === "priority") {
-        const order = ["urgent","high","medium","low"]
+        const order = ["urgent", "high", "medium", "low"]
         va = order.indexOf(a.priority); vb = order.indexOf(b.priority)
       }
       else if (sortBy === "dueDate") { va = Date.parse(a.dueDate?.toString() ?? "0"); vb = Date.parse(b.dueDate?.toString() ?? "0") }
@@ -219,34 +227,49 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
   return (
     <>
       {!trashMode && (
-        <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All priorities</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="flex gap-1">
-            {[
-              { key: "createdAt", label: "Date" },
-              { key: "title", label: "A–Z" },
-              { key: "priority", label: "Priority" },
-              { key: "dueDate", label: "Due" },
-            ].map(s => (
-              <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
-                {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
+        <>
+          <div className="flex items-center justify-end gap-2">
+            <Link
+              href="/tasks/trash"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors border"
+            >
+              <Trash2 className="w-4 h-4" /> Trash
+            </Link>
+              <Button onClick={() => setCreateOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" /> New Project
               </Button>
-            ))}
           </div>
-        </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
+
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All priorities</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-1">
+              {[
+                { key: "createdAt", label: "Date" },
+                { key: "title", label: "A–Z" },
+                { key: "priority", label: "Priority" },
+                { key: "dueDate", label: "Due" },
+              ].map(s => (
+                <Button key={s.key} variant={sortBy === s.key ? "default" : "outline"} size="sm" onClick={() => toggleSort(s.key)} className="gap-1 text-xs px-2">
+                  {s.label}{sortBy === s.key && <ArrowUpDown className="w-3 h-3" />}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </>
       )}
       <div className="space-y-2">
         {(trashMode ? tasks : activeTasks).map(task => (
@@ -284,6 +307,13 @@ export function TasksList({ initialTasks, projectId, trashMode = false }: TasksL
             setTasks(prev => prev.map(t => t.id === updated.id ? { ...updated, projectTitle: editTarget.projectTitle } : t))
             setEditTarget(null)
           }}
+        />
+      )}
+      {createOpen && (
+        <TaskDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onSave={handleAdd}
         />
       )}
     </>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn, getStatusColor } from "@/lib/utils"
-import { FolderKanban, Pencil, Trash2, Target, Search, ArrowUpDown } from "lucide-react"
+import { FolderKanban, Pencil, Trash2, Target, Search, ArrowUpDown, Plus } from "lucide-react"
 import { ProjectDialog } from "./project-dialog"
 import { DeleteConfirm } from "@/components/ui/delete-confirm"
 import { toast } from "@/hooks/use-toast"
@@ -28,6 +28,13 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const router = useRouter()
+  const [createOpen, setCreateOpen] = useState(false)
+
+  const handleAdd = (newProject: Project) => {
+    setProjects(prev => [{
+      ...newProject,
+    }, ...prev])
+  }
 
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/projects/${id}`, { method: "DELETE" })
@@ -46,7 +53,7 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
   const filtered = projects
     .filter(p => {
       if (search && !p.title.toLowerCase().includes(search.toLowerCase()) &&
-          !(p.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
+        !(p.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
       if (statusFilter !== "all" && p.status !== statusFilter) return false
       return true
     })
@@ -62,6 +69,11 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
 
   return (
     <>
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" /> New Project
+        </Button>
+      </div>
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -146,6 +158,14 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
             setProjects(prev => prev.map(p => p.id === updated.id ? { ...updated, goalTitle: editTarget.goalTitle } : p))
             setEditTarget(null)
           }}
+        />
+      )}
+      {createOpen && (
+        <ProjectDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          goalId={goalId}
+          onSave={handleAdd}
         />
       )}
     </>

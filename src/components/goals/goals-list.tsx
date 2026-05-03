@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn, formatDate, getStatusColor } from "@/lib/utils"
-import { Target, Calendar, Pencil, Trash2, Search, ArrowUpDown, Tag } from "lucide-react"
+import { Target, Calendar, Pencil, Trash2, Search, ArrowUpDown, Tag, Plus } from "lucide-react"
 import { GoalDialog } from "./goal-dialog"
 import { DeleteConfirm } from "@/components/ui/delete-confirm"
 import { toast } from "@/hooks/use-toast"
@@ -33,9 +33,19 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
   const router = useRouter()
+  const [createOpen, setCreateOpen] = useState(false)
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleAdd = (newGoal: Goal) => {
+    const category = categories.find(c => c.id === newGoal.categoryId)
+    setGoals(prev => [{
+      ...newGoal,
+      categoryName: category?.name ?? null,
+      categoryColor: category?.color ?? null,
+      categoryIcon: category?.icon ?? null,
+    }, ...prev])
+  }
+
+  const handleDelete = async (id: string) => {
     const res = await fetch(`/api/goals/${id}`, { method: "DELETE" })
     if (res.ok) {
       setGoals(prev => prev.filter(g => g.id !== id))
@@ -52,7 +62,7 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
   const filtered = goals
     .filter(g => {
       if (search && !g.title.toLowerCase().includes(search.toLowerCase()) &&
-          !(g.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
+        !(g.description ?? "").toLowerCase().includes(search.toLowerCase())) return false
       if (statusFilter !== "all" && g.status !== statusFilter) return false
       if (categoryFilter !== "all") {
         if (categoryFilter === "none") { if (g.categoryId) return false }
@@ -73,6 +83,11 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
 
   return (
     <>
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus className="w-4 h-4 mr-2" /> New Goal
+        </Button>
+      </div>
       {/* Search + Filters */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
@@ -186,7 +201,7 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => { e.stopPropagation(); setEditTarget(goal) }}>
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
-                <DeleteConfirm onConfirm={() => handleDelete(goal.id, {} as React.MouseEvent)}>
+                <DeleteConfirm onConfirm={() => handleDelete(goal.id)}>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -206,6 +221,13 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
             setGoals(prev => prev.map(g => g.id === updated.id ? { ...updated, categoryName: editTarget.categoryName, categoryColor: editTarget.categoryColor } : g))
             setEditTarget(null)
           }}
+        />
+      )}
+      {createOpen && (
+        <GoalDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onSave={handleAdd}
         />
       )}
     </>

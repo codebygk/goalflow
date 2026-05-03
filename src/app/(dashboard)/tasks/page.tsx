@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { tasks, projects } from "@/lib/db/schema";
 import { eq, desc, isNull } from "drizzle-orm";
 import { TasksList } from "@/components/tasks/tasks-list";
-import { CreateTaskButton } from "@/components/tasks/create-task-button";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 
@@ -35,15 +34,6 @@ export default async function TasksPage() {
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-bold">Tasks</h1>
           <p className="text-muted-foreground mt-1">Everything you need to get done</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/tasks/trash"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors border"
-          >
-            <Trash2 className="w-4 h-4" /> Trash
-          </Link>
-          <CreateTaskButton />
         </div>
       </div>
       <TasksList initialTasks={activeTasks} />
