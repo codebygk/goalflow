@@ -305,7 +305,7 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
               </div>
 
               {/* Footer: status + category + date */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t">
+              <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t">
                 <Badge className={cn("capitalize border text-xs", getStatusColor(goal.status))}>
                   {goal.status.replace("_", " ")}
                 </Badge>

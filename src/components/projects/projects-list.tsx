@@ -1,19 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn, getStatusColor } from "@/lib/utils"
-import { FolderKanban, Pencil, Trash2, Target, Search, ArrowUpDown, Plus } from "lucide-react"
+import { FolderKanban, Pencil, Trash2, Target, Search, ArrowUpDown, Plus, List, LayoutGrid } from "lucide-react"
 import { ProjectDialog } from "./project-dialog"
 import { DeleteConfirm } from "@/components/ui/delete-confirm"
 import { toast } from "@/hooks/use-toast"
 import { Project } from "@/lib/db/schema"
 
 type ProjectWithGoal = Project & { goalTitle?: string | null }
+type ViewMode = "list" | "grid"
+
+const VIEW_MODE_KEY = "projects_view_mode"
 
 interface ProjectsListProps {
   initialProjects: ProjectWithGoal[]
@@ -28,7 +31,26 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  // Always start with "list" — matches SSR output, preventing hydration mismatch.
+  // useEffect applies the saved preference after hydration is complete.
+  const [viewMode, setViewMode] = useState<ViewMode>("list")
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_MODE_KEY)
+      if (saved === "grid" || saved === "list") setViewMode(saved)
+    } catch {}
+    setMounted(true)
+  }, [])
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, mode)
+    } catch {}
+  }
 
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/projects/${id}`, { method: "DELETE" })
@@ -65,11 +87,13 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
       return 0
     })
 
+  // Before mount: always render "list" so server HTML === first client render.
+  // After mount: use the real saved preference (no visible flash because
+  // useEffect fires synchronously before the browser paints in practice).
+  const effectiveView: ViewMode = mounted ? viewMode : "list"
+
   return (
     <>
-
-
-      {/* List or empty state */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-2 text-center py-16 text-muted-foreground border rounded-2xl bg-white">
           <FolderKanban className="w-10 h-10 mx-auto opacity-30" />
@@ -81,6 +105,7 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
         </div>
       ) : (
         <div className="space-y-3">
+          {/* Controls toolbar */}
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -107,45 +132,126 @@ export function ProjectsList({ initialProjects, goalId }: ProjectsListProps) {
                 </Button>
               ))}
             </div>
+
+            {/* View mode toggle */}
+            <div className="flex items-center rounded-md border bg-muted p-0.5 gap-0.5 h-9">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-7 w-7 rounded-sm transition-all",
+                  effectiveView === "list" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => handleViewModeChange("list")}
+                title="List view"
+              >
+                <List className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-7 w-7 rounded-sm transition-all",
+                  effectiveView === "grid" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => handleViewModeChange("grid")}
+                title="Grid view"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+
             <Button size={"sm"} onClick={() => setCreateOpen(true)}>
               <Plus className="w-4 h-4 mr-2" /> New Project
             </Button>
           </div>
-          {filtered.map(project => (
-            <div
-              key={project.id}
-              onClick={() => router.push(`/projects/${project.id}`)}
-              className="bg-white border rounded-2xl p-4 md:p-5 flex items-center gap-3 md:gap-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/30 group"
-            >
-              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0">
-                <FolderKanban className="w-4 h-4 md:w-5 md:h-5 text-violet-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-sm">{project.title}</span>
-                  <Badge className={cn("capitalize border text-xs", getStatusColor(project.status))}>
-                    {project.status.replace("_", " ")}
-                  </Badge>
+
+          {/* ── List view ───────────────────────────────────────────────────── */}
+          {effectiveView === "list" ? (
+            <div className="space-y-3">
+              {filtered.map(project => (
+                <div
+                  key={project.id}
+                  onClick={() => router.push(`/projects/${project.id}`)}
+                  className="bg-white border rounded-2xl p-4 md:p-5 flex items-center gap-3 md:gap-4 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/30 group"
+                >
+                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0">
+                    <FolderKanban className="w-4 h-4 md:w-5 md:h-5 text-violet-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm">{project.title}</span>
+                      <Badge className={cn("capitalize border text-xs", getStatusColor(project.status))}>
+                        {project.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    {project.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{project.description}</p>}
+                    {project.goalTitle && (
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <Target className="w-3 h-3" /> {project.goalTitle}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => { e.stopPropagation(); setEditTarget(project) }}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <DeleteConfirm onConfirm={() => handleDelete(project.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </DeleteConfirm>
+                  </div>
                 </div>
-                {project.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{project.description}</p>}
-                {project.goalTitle && (
-                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                    <Target className="w-3 h-3" /> {project.goalTitle}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={e => { e.stopPropagation(); setEditTarget(project) }}>
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
-                <DeleteConfirm onConfirm={() => handleDelete(project.id)}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </DeleteConfirm>
-              </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            /* ── Grid view ────────────────────────────────────────────────── */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filtered.map(project => (
+                <div
+                  key={project.id}
+                  onClick={() => router.push(`/projects/${project.id}`)}
+                  className="bg-white border rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/30 group relative"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0">
+                      <FolderKanban className="w-5 h-5 text-violet-600" />
+                    </div>
+                    <div
+                      className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); setEditTarget(project) }}>
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                      <DeleteConfirm onConfirm={() => handleDelete(project.id)}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </DeleteConfirm>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm leading-snug line-clamp-2">{project.title}</p>
+                    {project.description && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{project.description}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t">
+                    <Badge className={cn("capitalize border text-xs", getStatusColor(project.status))}>
+                      {project.status.replace("_", " ")}
+                    </Badge>
+                    {project.goalTitle && (
+                      <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1 shrink-0">
+                        <Target className="w-3 h-3" /> {project.goalTitle}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
