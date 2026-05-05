@@ -1,17 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn, formatDate, getStatusColor } from "@/lib/utils"
-import { Target, Calendar, Pencil, Trash2, Search, ArrowUpDown, Tag, Plus } from "lucide-react"
+import { Target, Calendar, Pencil, Trash2, Search, ArrowUpDown, Tag, Plus, LayoutGrid, List } from "lucide-react"
 import { GoalDialog } from "./goal-dialog"
 import { DeleteConfirm } from "@/components/ui/delete-confirm"
 import { toast } from "@/hooks/use-toast"
 import { Goal, Category } from "@/lib/db/schema"
+
+type ViewMode = "list" | "grid"
+const VIEW_MODE_KEY = "goals_view_mode"
 
 type GoalWithCategory = Goal & {
   categoryName?: string | null
@@ -33,7 +36,23 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [sortBy, setSortBy] = useState("createdAt")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
+  const [viewMode, setViewMode] = useState<ViewMode>("list")
   const router = useRouter()
+
+  // Load saved view mode from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_MODE_KEY) as ViewMode | null
+      if (saved === "grid" || saved === "list") setViewMode(saved)
+    } catch {}
+  }, [])
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, mode)
+    } catch {}
+  }
 
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/goals/${id}`, { method: "DELETE" })
@@ -76,20 +95,9 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
     })
 
   return (
-    <>   
-      {/* List or empty state */}
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 text-center py-16 text-muted-foreground border rounded-2xl bg-white">
-          <Target className="w-10 h-10 mx-auto opacity-30" />
-          <p className="font-medium">{goals.length === 0 ? "No goals yet" : "No goals match your filters"}</p>
-          <p className="text-sm">{goals.length === 0 ? "Add your first goal to achieve it" : "Try adjusting your search or filters"}</p>
-          <Button size={"sm"} onClick={() => setCreateOpen(true)} className="mt-3">
-            <Plus className="w-4 h-4 mr-2" /> New Goal
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row gap-2 mb-4">
+    <>
+      {/* Controls toolbar */}
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -145,10 +153,55 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
             </Button>
           ))}
         </div>
-        <Button size={"sm"} onClick={() => setCreateOpen(true)}>
+
+        {/* View mode toggle */}
+        <div className="flex items-center rounded-md border bg-muted p-0.5 gap-0.5 h-9">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-7 w-7 rounded-sm transition-all",
+              viewMode === "list" && "bg-background shadow-sm text-foreground",
+              viewMode !== "list" && "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => handleViewModeChange("list")}
+            title="List view"
+          >
+            <List className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-7 w-7 rounded-sm transition-all",
+              viewMode === "grid" && "bg-background shadow-sm text-foreground",
+              viewMode !== "grid" && "text-muted-foreground hover:text-foreground"
+            )}
+            onClick={() => handleViewModeChange("grid")}
+            title="Grid view"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="w-4 h-4 mr-2" /> New Goal
         </Button>
       </div>
+
+      {/* List or empty state */}
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 text-center py-16 text-muted-foreground border rounded-2xl bg-white">
+          <Target className="w-10 h-10 mx-auto opacity-30" />
+          <p className="font-medium">{goals.length === 0 ? "No goals yet" : "No goals match your filters"}</p>
+          <p className="text-sm">{goals.length === 0 ? "Add your first goal to achieve it" : "Try adjusting your search or filters"}</p>
+          <Button size="sm" onClick={() => setCreateOpen(true)} className="mt-3">
+            <Plus className="w-4 h-4 mr-2" /> New Goal
+          </Button>
+        </div>
+      ) : viewMode === "list" ? (
+        // ── List view ──────────────────────────────────────────────────────────
+        <div className="space-y-3">
           {filtered.map(goal => (
             <div
               key={goal.id}
@@ -157,7 +210,9 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
             >
               <div
                 className="w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={goal.categoryColor ? { backgroundColor: goal.categoryColor + "20" } : { backgroundColor: "hsl(var(--primary)/0.1)" }}
+                style={goal.categoryColor
+                  ? { backgroundColor: goal.categoryColor + "20" }
+                  : { backgroundColor: "hsl(var(--primary)/0.1)" }}
               >
                 <Target
                   className="w-4 h-4 md:w-5 md:h-5"
@@ -200,6 +255,73 @@ export function GoalsList({ initialGoals, categories = [] }: GoalsListProps) {
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </DeleteConfirm>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        // ── Grid view ──────────────────────────────────────────────────────────
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(goal => (
+            <div
+              key={goal.id}
+              onClick={() => router.push(`/goals/${goal.id}`)}
+              className="bg-white border rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-primary/30 group relative"
+            >
+              {/* Top row: icon + actions */}
+              <div className="flex items-start justify-between gap-2">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={goal.categoryColor
+                    ? { backgroundColor: goal.categoryColor + "20" }
+                    : { backgroundColor: "hsl(var(--primary)/0.1)" }}
+                >
+                  <Target
+                    className="w-5 h-5"
+                    style={goal.categoryColor ? { color: goal.categoryColor } : { color: "hsl(var(--primary))" }}
+                  />
+                </div>
+                <div
+                  className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); setEditTarget(goal) }}>
+                    <Pencil className="w-3 h-3" />
+                  </Button>
+                  <DeleteConfirm onConfirm={() => handleDelete(goal.id)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive">
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </DeleteConfirm>
+                </div>
+              </div>
+
+              {/* Title + description */}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm leading-snug line-clamp-2">{goal.title}</p>
+                {goal.description && (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{goal.description}</p>
+                )}
+              </div>
+
+              {/* Footer: status + category + date */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t">
+                <Badge className={cn("capitalize border text-xs", getStatusColor(goal.status))}>
+                  {goal.status.replace("_", " ")}
+                </Badge>
+                {goal.categoryName && (
+                  <span
+                    className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
+                    style={{ backgroundColor: (goal.categoryColor ?? "#6366f1") + "20", color: goal.categoryColor ?? "#6366f1" }}
+                  >
+                    <Tag className="w-2.5 h-2.5" /> {goal.categoryName}
+                  </span>
+                )}
+                {goal.targetDate && (
+                  <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1 shrink-0">
+                    <Calendar className="w-3 h-3" /> {formatDate(goal.targetDate)}
+                  </span>
+                )}
               </div>
             </div>
           ))}
