@@ -29,27 +29,20 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Workspace",
     defaultOpen: true,
     items: [
-      { href: "/overview", label: "Overview",  icon: BarChart2 },
-      { href: "/inbox",    label: "Inbox",     icon: Inbox },
+      { href: "/overview", label: "Overview", icon: BarChart2 },
+      { href: "/inbox", label: "Inbox", icon: Inbox },
+      { href: "/today", label: "Today", icon: Sun },
+      { href: "/upcoming", label: "Upcoming", icon: CalendarDays },
+
     ],
   },
   {
     label: "Plan",
     defaultOpen: true,
     items: [
-      { href: "/goals",    label: "Goals",    icon: Target },
+      { href: "/goals", label: "Goals", icon: Target },
       { href: "/projects", label: "Projects", icon: FolderKanban },
-      { href: "/tasks",    label: "Tasks",    icon: CheckSquare },
-    ],
-  },
-  {
-    label: "Schedule",
-    defaultOpen: true,
-    items: [
-      { href: "/today",     label: "Today",     icon: Sun },
-      { href: "/tomorrow",  label: "Tomorrow",  icon: CalendarDays },
-      { href: "/this-week", label: "This Week", icon: CalendarRange },
-      { href: "/later",     label: "Later",     icon: Clock },
+      { href: "/tasks", label: "Tasks", icon: CheckSquare },
     ],
   },
   {
@@ -57,7 +50,7 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { href: "/categories", label: "Categories", icon: Tag },
-      { href: "/trash",      label: "Trash",       icon: Trash2 },
+      { href: "/trash", label: "Trash", icon: Trash2 },
     ],
   },
 ]

@@ -313,7 +313,7 @@ export function TasksList({ initialTasks, projectId }: TasksListProps) {
             </Button>
           ))}
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button size={"sm"} onClick={() => setCreateOpen(true)}>
           <Plus className="w-4 h-4 mr-2" /> New Task
         </Button>
       </div>
